@@ -1,0 +1,82 @@
+{
+  "contacts": [
+    {
+      "id": "ftc",
+      "url": { "en": "https://reportfraud.ftc.gov/", "es": "https://reportefraude.ftc.gov/" },
+      "label": { "en": "ReportFraud.ftc.gov", "es": "ReporteFraude.ftc.gov" },
+      "name": { "en": "Federal Trade Commission", "es": "Comisión Federal de Comercio" },
+      "use": { "en": "Report any scam, even if you lost nothing.", "es": "Reporte cualquier estafa, aunque no haya perdido dinero." }
+    },
+    {
+      "id": "identity",
+      "url": { "en": "https://www.identitytheft.gov/", "es": "https://www.robodeidentidad.gov/" },
+      "label": { "en": "IdentityTheft.gov", "es": "RoboDeIdentidad.gov" },
+      "name": { "en": "Federal Trade Commission", "es": "Comisión Federal de Comercio" },
+      "use": { "en": "You shared your Social Security number or other personal details.", "es": "Compartió su número de Seguro Social u otros datos personales." }
+    },
+    {
+      "id": "ic3",
+      "url": { "en": "https://www.ic3.gov/", "es": "https://www.ic3.gov/" },
+      "label": { "en": "IC3.gov", "es": "IC3.gov" },
+      "name": { "en": "FBI Internet Crime Complaint Center", "es": "Centro de Denuncias de Delitos por Internet del FBI" },
+      "use": { "en": "You lost money in an online scam. Report quickly, especially for wire transfers.", "es": "Perdió dinero en una estafa por internet. Repórtelo pronto, sobre todo si fue una transferencia bancaria." }
+    },
+    {
+      "id": "cfpb",
+      "url": { "en": "https://www.consumerfinance.gov/complaint/", "es": "https://www.consumerfinance.gov/es/enviar-una-queja/" },
+      "label": { "en": "ConsumerFinance.gov", "es": "ConsumerFinance.gov" },
+      "name": { "en": "Consumer Financial Protection Bureau", "es": "Oficina para la Protección Financiera del Consumidor" },
+      "use": { "en": "Your bank or card company will not help you.", "es": "Su banco o compañía de tarjeta no quiere ayudarle." }
+    },
+    {
+      "id": "aarp",
+      "url": { "en": "https://www.aarp.org/money/scams-fraud/helpline/", "es": "https://www.aarp.org/money/scams-fraud/helpline/" },
+      "label": { "en": "877-908-3360", "es": "877-908-3360" },
+      "href": "tel:+18779083360",
+      "name": { "en": "AARP Fraud Watch Network Helpline", "es": "Línea de ayuda de la Red de Vigilancia de Fraudes de AARP" },
+      "use": { "en": "You want to talk it through with a trained person. Free, and you do not need to be a member.", "es": "Quiere hablar con una persona capacitada. Es gratis y no necesita ser socio." }
+    }
+  ],
+  "paymentGuidance": [
+    {
+      "methods": ["credit_card"],
+      "en": { "title": "Credit card", "action": "Call the number on the back of the card and ask to dispute the charge. Follow up in writing: US law generally gives you 60 days from the statement date to dispute a billing error in writing." },
+      "es": { "title": "Tarjeta de crédito", "action": "Llame al número que aparece detrás de la tarjeta y pida disputar el cargo. Confirme por escrito: la ley de EE. UU. por lo general le da 60 días desde la fecha del estado de cuenta para disputar un error por escrito." }
+    },
+    {
+      "methods": ["debit_card"],
+      "en": { "title": "Debit card", "action": "Call your bank today. How much you are responsible for can grow with time if a charge was made without your permission, so 2 business days matters." },
+      "es": { "title": "Tarjeta de débito", "action": "Llame a su banco hoy. Lo que usted debe pagar puede aumentar con el tiempo si el cargo se hizo sin su permiso, así que 2 días hábiles importan." }
+    },
+    {
+      "methods": ["bank_transfer"],
+      "en": { "title": "Wire or bank transfer", "action": "Call your bank's fraud department right now and ask them to recall the transfer. Then report it at IC3.gov. The first hours matter most." },
+      "es": { "title": "Giro o transferencia bancaria", "action": "Llame ahora al departamento de fraude de su banco y pida que recuperen la transferencia. Luego repórtelo en IC3.gov. Las primeras horas son las más importantes." }
+    },
+    {
+      "methods": ["paypal"],
+      "en": { "title": "PayPal", "action": "Open a dispute in PayPal's Resolution Center within 180 days of the payment. If you paid using 'Friends and Family', call PayPal as well, because purchase protection usually does not apply." },
+      "es": { "title": "PayPal", "action": "Abra una disputa en el Centro de resoluciones de PayPal dentro de los 180 días posteriores al pago. Si pagó con la opción 'Amigos y familiares', llame también a PayPal, porque la protección de compras por lo general no aplica." }
+    },
+    {
+      "methods": ["zelle_or_app"],
+      "en": { "title": "Zelle, Venmo, or Cash App", "action": "Report it inside the app and call your bank using the number on your card. These payments are hard to reverse, so ask directly whether a recovery can be tried." },
+      "es": { "title": "Zelle, Venmo o Cash App", "action": "Repórtelo dentro de la aplicación y llame a su banco con el número de su tarjeta. Estos pagos son difíciles de revertir, así que pregunte directamente si se puede intentar recuperarlos." }
+    },
+    {
+      "methods": ["gift_card"],
+      "en": { "title": "Gift cards", "action": "Call the company that issued the card, using the number on the card or its official website. Tell them it was used in a scam and ask for a refund. Keep the cards and receipts." },
+      "es": { "title": "Tarjetas de regalo", "action": "Llame a la empresa que emitió la tarjeta, con el número de la tarjeta o de su sitio web oficial. Diga que se usó en una estafa y pida un reembolso. Guarde las tarjetas y los recibos." }
+    },
+    {
+      "methods": ["crypto"],
+      "en": { "title": "Cryptocurrency", "action": "Tell the exchange or ATM company at once and report it at IC3.gov. Crypto payments usually cannot be reversed. Be wary of anyone who offers to get it back for a fee." },
+      "es": { "title": "Criptomonedas", "action": "Avise de inmediato a la plataforma o empresa del cajero y repórtelo en IC3.gov. Estos pagos casi nunca se pueden revertir. Desconfíe de quien ofrezca recuperarlos a cambio de un pago." }
+    },
+    {
+      "methods": ["other"],
+      "en": { "title": "Cash or mail", "action": "If you mailed it, call the shipping company right away and ask to stop delivery. Report what happened at ReportFraud.ftc.gov." },
+      "es": { "title": "Efectivo o correo", "action": "Si lo envió por correo, llame de inmediato a la empresa de envíos y pida detener la entrega. Reporte lo ocurrido en ReporteFraude.ftc.gov." }
+    }
+  ]
+}

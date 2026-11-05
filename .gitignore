@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Runtime store: holds the messages people submit
+.data/
+
+npm-debug.log*
+.DS_Store
