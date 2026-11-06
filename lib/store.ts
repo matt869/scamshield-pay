@@ -29,8 +29,13 @@ interface StoreData {
   checks: Record<string, CheckRecord>;
   orders: Record<string, OrderRef>;
   invoices: Record<string, InvoiceRef>;
-  /** PayPal capture ID to check ID, so refunds can find what they reverse. */
-  captures: Record<string, string>;
+  /** PayPal capture ID to what it paid for, so refunds can find what they reverse. */
+  captures: Record<string, CaptureRef>;
+}
+
+export interface CaptureRef {
+  checkId: string;
+  amount: string;
 }
 
 interface StoreState {
@@ -38,7 +43,9 @@ interface StoreState {
   data: StoreData;
   loaded: boolean;
   writeQueue: Promise<void>;
+  /** Set only when the file on disk could not be read, so that it is never overwritten. */
   persistenceDisabled: boolean;
+  writeFailing: boolean;
 }
 
 function emptyData(): StoreData {
@@ -52,7 +59,14 @@ function state(): StoreState {
   const file = path.resolve(/*turbopackIgnore: true*/ process.env.STORE_FILE || ".data/store.json");
   let current = globalForStore.__scamshieldStore;
   if (!current || current.file !== file) {
-    current = { file, data: emptyData(), loaded: false, writeQueue: Promise.resolve(), persistenceDisabled: false };
+    current = {
+      file,
+      data: emptyData(),
+      loaded: false,
+      writeQueue: Promise.resolve(),
+      persistenceDisabled: false,
+      writeFailing: false,
+    };
     globalForStore.__scamshieldStore = current;
   }
   if (!current.loaded) {
@@ -78,16 +92,35 @@ function persist(current: StoreState): Promise<void> {
       await fs.promises.mkdir(path.dirname(current.file), { recursive: true });
       const temp = `${current.file}.${process.pid}.tmp`;
       await fs.promises.writeFile(temp, snapshot, { mode: 0o600 });
-      await fs.promises.rename(temp, current.file);
+      await renameWithRetry(temp, current.file);
+      if (current.writeFailing) console.error("store: writing the store file works again");
+      current.writeFailing = false;
     } catch (error) {
-      current.persistenceDisabled = true;
-      console.error(
-        `store: cannot write the store file (${(error as NodeJS.ErrnoException).code ?? "unknown"}); ` +
-          "running from memory, and records will be lost on restart",
-      );
+      // Each write carries the whole store, so the next successful one catches up.
+      if (!current.writeFailing) {
+        console.error(
+          `store: cannot write the store file (${(error as NodeJS.ErrnoException).code ?? "unknown"}); ` +
+            "records are kept in memory and saved on the next successful write",
+        );
+      }
+      current.writeFailing = true;
     }
   });
   return current.writeQueue;
+}
+
+/** On Windows a rename fails briefly while another process, such as antivirus, has the file open. */
+async function renameWithRetry(from: string, to: string): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await fs.promises.rename(from, to);
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (attempt >= 4 || (code !== "EPERM" && code !== "EBUSY" && code !== "EACCES")) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 50 * (attempt + 1)));
+    }
+  }
 }
 
 function purgeExpired(current: StoreState, now: number): void {
@@ -101,8 +134,8 @@ function purgeExpired(current: StoreState, now: number): void {
   for (const [id, ref] of Object.entries(invoices)) {
     if (!checks[ref.checkId]) delete invoices[id];
   }
-  for (const [id, checkId] of Object.entries(captures)) {
-    if (!checks[checkId]) delete captures[id];
+  for (const [id, ref] of Object.entries(captures)) {
+    if (!checks[ref.checkId]) delete captures[id];
   }
 }
 
@@ -151,7 +184,7 @@ export function getInvoiceRef(invoiceId: string): InvoiceRef | null {
   return state().data.invoices[invoiceId] ?? null;
 }
 
-export function getCheckIdForCapture(captureId: string): string | null {
+export function getCaptureRef(captureId: string): CaptureRef | null {
   return state().data.captures[captureId] ?? null;
 }
 
@@ -159,9 +192,12 @@ export function getCheckIdForCapture(captureId: string): string | null {
  * Grants the kit. A revoked payment stays revoked, so a retried "completed" webhook arriving
  * after a refund cannot hand the kit back.
  */
-export async function markPaid(checkId: string, captureId?: string): Promise<CheckRecord | null> {
+export async function markPaid(
+  checkId: string,
+  capture?: { id: string; amount: string },
+): Promise<CheckRecord | null> {
   const current = state();
-  if (captureId) current.data.captures[captureId] = checkId;
+  if (capture) current.data.captures[capture.id] = { checkId, amount: capture.amount };
   return updateCheck(checkId, (check) => {
     if (check.paymentStatus === "revoked") return;
     if (check.paymentStatus !== "paid") check.paidAt = Date.now();

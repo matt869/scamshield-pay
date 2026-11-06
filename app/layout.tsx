@@ -1,26 +1,26 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, Atkinson_Hyperlegible_Next } from "next/font/google";
-import { cookies, headers } from "next/headers";
 import type { ReactNode } from "react";
 import { LanguageProvider } from "@/components/LanguageToggle";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
-import { languageFromHeader, t } from "@/lib/i18n";
-import { LanguageSchema, type Language } from "@/lib/types";
+import { t } from "@/lib/i18n";
+import { resolveLanguage } from "@/lib/language-server";
 import "./globals.css";
 
 const display = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-display" });
 // Designed by the Braille Institute for low-vision readers, which suits this audience.
 const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], variable: "--font-body", adjustFontFallback: false });
 
-async function resolveLanguage(): Promise<Language> {
-  const saved = LanguageSchema.safeParse((await cookies()).get("lang")?.value);
-  if (saved.success) return saved.data;
-  return languageFromHeader((await headers()).get("accept-language"));
-}
+export const viewport: Viewport = { themeColor: "#f7faf6" };
 
 export async function generateMetadata(): Promise<Metadata> {
   const { meta } = t(await resolveLanguage());
-  return { title: meta.title, description: meta.description, icons: { icon: "/logo.svg" } };
+  return {
+    title: { default: meta.title, template: "%s · ScamShield Pay" },
+    description: meta.description,
+    icons: { icon: "/logo.svg" },
+    openGraph: { title: meta.title, description: meta.description, siteName: "ScamShield Pay", type: "website" },
+  };
 }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
@@ -30,7 +30,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body>
         <LanguageProvider initial={language}>
           <SiteHeader />
-          <main id="main">{children}</main>
+          <main id="main" tabIndex={-1}>
+            {children}
+          </main>
           <SiteFooter />
         </LanguageProvider>
       </body>

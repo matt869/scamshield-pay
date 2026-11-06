@@ -17,7 +17,7 @@ export function SiteHeader() {
         <img src="/logo.svg" alt="" width={32} height={32} />
         <span>ScamShield Pay</span>
       </Link>
-      <nav aria-label="Main">
+      <nav aria-label={copy.nav.main}>
         <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
           {copy.nav.check}
         </Link>

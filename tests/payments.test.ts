@@ -7,7 +7,16 @@ import { POST as createOrderPost } from "@/app/api/paypal/create-order/route";
 import { POST as webhookPost } from "@/app/api/paypal/webhook/route";
 import { POST as disputePost } from "@/app/api/dispute/route";
 import { evaluateOrder } from "@/lib/paypal";
-import { getCheck, getOrderRef, rememberInvoice, rememberOrder, saveCheck, storeIdle } from "@/lib/store";
+import {
+  getCheck,
+  getOrderRef,
+  markPaid,
+  markRevoked,
+  rememberInvoice,
+  rememberOrder,
+  saveCheck,
+  storeIdle,
+} from "@/lib/store";
 import type { CheckRecord } from "@/lib/types";
 
 const CHECK_ID = "11111111-1111-4111-8111-111111111111";
@@ -409,7 +418,58 @@ describe("dispute", () => {
   });
 });
 
+describe("refunds after a price change", () => {
+  it("measures a full refund against what the customer paid", async () => {
+    process.env.KIT_PRICE_USD = "15.00";
+    await saveCheck(check());
+    await rememberOrder("ORDER1", EXPECTED);
+    mockPayPal((url) =>
+      url.endsWith("/v1/notifications/verify-webhook-signature")
+        ? jsonResponse({ verification_status: "SUCCESS" })
+        : jsonResponse(capturedOrder()),
+    );
+    await capturePost(post("/api/paypal/capture-order", { orderId: "ORDER1" }));
+    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("paid");
+
+    const refund = JSON.stringify({
+      event_type: "PAYMENT.CAPTURE.REFUNDED",
+      resource: {
+        id: "REFUND1",
+        amount: { value: "9.00", currency_code: "USD" },
+        links: [{ rel: "up", href: "https://api.paypal.com/v2/payments/captures/CAP1" }],
+      },
+    });
+    await webhookPost(post("/api/paypal/webhook", refund, SIGNED));
+
+    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("revoked");
+  });
+});
+
 describe("store", () => {
+  it("keeps saving after a write fails once", async () => {
+    await saveCheck(check());
+    await storeIdle();
+    const file = process.env.STORE_FILE as string;
+    // A directory where the file should be makes the next write fail.
+    fs.rmSync(file);
+    fs.mkdirSync(file);
+    await markPaid(CHECK_ID);
+    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("paid");
+
+    fs.rmSync(file, { recursive: true });
+    await markRevoked(CHECK_ID);
+    const saved = JSON.parse(fs.readFileSync(file, "utf8"));
+    expect(saved.checks[CHECK_ID].paymentStatus).toBe("revoked");
+  });
+
+  it("never overwrites a store file it could not read", async () => {
+    const file = process.env.STORE_FILE as string;
+    fs.writeFileSync(file, "{ not json");
+    await saveCheck(check());
+    await storeIdle();
+    expect(fs.readFileSync(file, "utf8")).toBe("{ not json");
+  });
+
   it("hides and purges expired checks", async () => {
     await saveCheck(check({ expiresAt: Date.now() - 1 }));
     expect(getCheck(CHECK_ID)).toBeNull();

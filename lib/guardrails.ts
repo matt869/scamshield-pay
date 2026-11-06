@@ -71,7 +71,7 @@ const HARD_SIGNALS: HardSignal[] = [
   },
   {
     pattern:
-      /\b(do not|don'?t|never)\b.{0,20}\b(tell|inform|contact)\b.{0,30}\b(anyone|anybody|family|bank|police)\b|\bkeep (this|it) (a )?(secret|confidential)\b|\bno (le )?(diga|digas|cuente|cuentes)\b.{0,30}\b(nadie|familia|banco|polic[ií]a)\b/iu,
+      /\b(do not|don'?t|never)\b.{0,20}\b(tell|inform|contact|call)\b.{0,30}\b(anyone|anybody|family|bank|police|mom|dad|mum|parents|husband|wife|kids|children|son|daughter)\b|\bkeep (this|it) (a )?(secret|confidential|between us)\b|\bno (le |les )?(diga|digas|cuente|cuentes|avise|avises)\b.{0,30}\b(nadie|familia|banco|polic[ií]a|mam[aá]|pap[aá]|padres|esposo|esposa|hijos?|hijas?)(?!\p{L})/iu,
     flag: {
       en: {
         title: "It tells you to keep this secret",

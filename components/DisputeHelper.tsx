@@ -51,8 +51,12 @@ export function DisputeHelper({
         setKit(body.kit);
         setKitLanguage(language);
         setCopied(false);
+      } else if (body.error === "generation_limit") {
+        setError(text.limit);
+      } else if (body.error === "payment_required") {
+        setError(text.notPaid);
       } else {
-        setError(body.error === "generation_limit" ? text.limit : text.failed);
+        setError(text.failed);
       }
     } catch {
       setError(text.failed);
@@ -62,8 +66,13 @@ export function DisputeHelper({
 
   async function copyLetter() {
     if (!kit) return;
-    await navigator.clipboard.writeText(`${kit.letter_subject}\n\n${kit.letter_body}`);
-    setCopied(true);
+    try {
+      // The clipboard is unavailable on plain http and in some browsers, so failure is expected.
+      await navigator.clipboard.writeText(`${kit.letter_subject}\n\n${kit.letter_body}`);
+      setCopied(true);
+    } catch {
+      setError(text.copyFailed);
+    }
   }
 
   return (

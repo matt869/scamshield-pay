@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { NotFoundView, ResultView } from "@/components/ResultView";
+import { serverCopy } from "@/lib/language-server";
 import { kitPrice } from "@/lib/paypal";
 import { getCheck } from "@/lib/store";
 import { toPublicCheck } from "@/lib/types";
 
-export const metadata: Metadata = { robots: { index: false, follow: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await serverCopy()).result.pageTitle, robots: { index: false, follow: false } };
+}
 
 export default async function ResultPage({
   searchParams,

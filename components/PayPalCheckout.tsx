@@ -2,7 +2,7 @@
 
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { useLanguage } from "./LanguageToggle";
 
 async function postJson<T>(url: string, body: unknown): Promise<{ ok: boolean; body: T }> {
@@ -19,6 +19,7 @@ export function PayPalCheckout({ checkId, clientId }: { checkId: string; clientI
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const redirecting = useRef(false);
 
   return (
     <div className="paypal-checkout">
@@ -43,7 +44,10 @@ export function PayPalCheckout({ checkId, clientId }: { checkId: string; clientI
               checkId,
             });
             if (result.body.error === "already_paid") {
+              // Paid in another tab or by invoice: go to the kit rather than show an error.
+              redirecting.current = true;
               router.push(`/success?id=${checkId}`);
+              throw new Error("Already paid");
             }
             if (!result.ok || !result.body.orderId) {
               setError(result.body.error === "rate_limited" ? copy.pay.rateLimited : copy.pay.failed);
@@ -70,7 +74,9 @@ export function PayPalCheckout({ checkId, clientId }: { checkId: string; clientI
             setProcessing(false);
             setError(copy.pay.failed);
           }}
-          onError={() => setError((current) => current ?? copy.pay.failed)}
+          onError={() => {
+            if (!redirecting.current) setError((current) => current ?? copy.pay.failed);
+          }}
         />
       </PayPalScriptProvider>
     </div>

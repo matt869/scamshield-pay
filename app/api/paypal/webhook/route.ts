@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import {
   getInvoice,
+  kitPrice,
   PayPalError,
   PayPalNotConfiguredError,
   verifyWebhookSignature,
 } from "@/lib/paypal";
 import {
-  getCheckIdForCapture,
+  type CaptureRef,
+  getCaptureRef,
   getInvoiceRef,
   getOrderRef,
   markPaid,
@@ -77,23 +79,24 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
         console.error("webhook: capture amount does not match the order; not granting access");
         return;
       }
-      await markPaid(ref.checkId, resource.id);
+      await markPaid(ref.checkId, { id: resource.id, amount: ref.amount });
       return;
     }
 
     case "PAYMENT.CAPTURE.REVERSED": {
-      const checkId = findCheckForCaptureEvent(event);
-      if (checkId) await markRevoked(checkId);
+      const paid = findPaymentForCaptureEvent(event);
+      if (paid) await markRevoked(paid.checkId);
       return;
     }
 
     case "PAYMENT.CAPTURE.REFUNDED": {
-      const checkId = findCheckForCaptureEvent(event);
-      if (!checkId) return;
-      // A partial, goodwill refund leaves the customer's kit in place.
+      const paid = findPaymentForCaptureEvent(event);
+      if (!paid) return;
+      // A partial, goodwill refund leaves the customer's kit in place. "Full" is measured against
+      // what this customer paid, not today's price.
       const refunded = Number(resource.amount?.value ?? resource.amount?.total);
-      if (Number.isFinite(refunded) && refunded < refundThreshold()) return;
-      await markRevoked(checkId);
+      if (Number.isFinite(refunded) && refunded < Number(paid.amount)) return;
+      await markRevoked(paid.checkId);
       return;
     }
 
@@ -127,13 +130,12 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
 }
 
 /** Refund and reversal events point back at their capture through an "up" link. */
-function findCheckForCaptureEvent(event: WebhookEvent): string | null {
+function findPaymentForCaptureEvent(event: WebhookEvent): CaptureRef | null {
   const up = event.resource?.links?.find((link) => link.rel === "up")?.href;
   const captureId = up?.match(/\/captures\/([^/?#]+)/)?.[1] ?? event.resource?.id;
-  const fromCapture = captureId ? getCheckIdForCapture(captureId) : null;
-  return fromCapture ?? event.resource?.custom_id ?? null;
-}
-
-function refundThreshold(): number {
-  return Number(process.env.KIT_PRICE_USD || "9.00");
+  const fromCapture = captureId ? getCaptureRef(captureId) : null;
+  if (fromCapture) return fromCapture;
+  // Older or unusual events: the signed event names the check, and the price stands in.
+  const checkId = event.resource?.custom_id;
+  return checkId ? { checkId, amount: kitPrice() } : null;
 }

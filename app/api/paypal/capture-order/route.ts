@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   const outcome = evaluateOrder(order, ref);
   switch (outcome.state) {
     case "completed":
-      await markPaid(check.id, outcome.captureId);
+      await markPaid(check.id, { id: outcome.captureId, amount: ref.amount });
       return NextResponse.json({ status: "completed", checkId: check.id });
     case "pending":
       // The PAYMENT.CAPTURE.COMPLETED webhook grants access once the money clears.

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { createContext, type ReactNode, useCallback, useContext, useState } from "react";
 import { type Copy, t } from "@/lib/i18n";
 import type { Language } from "@/lib/types";
@@ -14,12 +15,18 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ initial, children }: { initial: Language; children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(initial);
+  const router = useRouter();
 
-  const setLanguage = useCallback((next: Language) => {
-    setLanguageState(next);
-    document.documentElement.lang = next;
-    document.cookie = `lang=${next}; path=/; max-age=31536000; samesite=lax`;
-  }, []);
+  const setLanguage = useCallback(
+    (next: Language) => {
+      setLanguageState(next);
+      document.documentElement.lang = next;
+      document.cookie = `lang=${next}; path=/; max-age=31536000; samesite=lax`;
+      // Re-renders the server parts, such as the tab title, in the new language.
+      router.refresh();
+    },
+    [router],
+  );
 
   return (
     <LanguageContext.Provider value={{ language, copy: t(language), setLanguage }}>

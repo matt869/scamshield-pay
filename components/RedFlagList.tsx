@@ -18,6 +18,7 @@ export function MarkedMessage({
   quotes: Array<string | null>;
   label: string;
 }) {
+  const { copy } = useLanguage();
   return (
     <figure className="marked-message">
       <figcaption>{label}</figcaption>
@@ -28,7 +29,10 @@ export function MarkedMessage({
           ) : (
             <mark key={index}>
               {segment.text}
-              <sup className="mark-number">{segment.flagNumber}</sup>
+              <sup className="mark-number" aria-hidden="true">
+                {segment.flagNumber}
+              </sup>
+              <span className="visually-hidden"> ({copy.result.markLabel(segment.flagNumber)})</span>
             </mark>
           ),
         )}
