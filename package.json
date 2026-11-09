@@ -11,9 +11,9 @@
   },
   "homepage": "https://github.com/matt869/scamshield-pay#readme",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

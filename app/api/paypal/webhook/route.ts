@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { bodyError, readText } from "@/lib/http";
 import {
   getInvoice,
   kitPrice,
@@ -29,7 +30,10 @@ interface WebhookEvent {
 }
 
 export async function POST(request: Request) {
-  const rawBody = await request.text();
+  // PayPal events are small; anything bigger is not from PayPal.
+  const raw = await readText(request, 256 * 1024);
+  if (!raw.ok) return bodyError(raw.status);
+  const rawBody = raw.value;
 
   let verified: boolean;
   try {

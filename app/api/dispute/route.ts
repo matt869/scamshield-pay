@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { bodyError, DEFAULT_MAX_BODY, readJson } from "@/lib/http";
 import { z } from "zod";
 import { ClaudeUnavailableError, generateDisputeKit } from "@/lib/claude";
-import { allowRequest, clientAddress, HOUR_MS } from "@/lib/rate-limit";
+import { allowCostly } from "@/lib/rate-limit";
 import { getCheck, updateCheck } from "@/lib/store";
 import { DisputeDetailsSchema, LanguageSchema } from "@/lib/types";
 
@@ -14,11 +15,13 @@ const RequestSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  if (!allowRequest(`dispute:${clientAddress(request)}`, 10, HOUR_MS)) {
+  if (!allowCostly(request, "dispute", 10, 100)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const parsed = RequestSchema.safeParse(await request.json().catch(() => null));
+  const body = await readJson(request, DEFAULT_MAX_BODY);
+  if (!body.ok) return bodyError(body.status);
+  const parsed = RequestSchema.safeParse(body.value);
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_details" }, { status: 400 });
   }

@@ -96,7 +96,14 @@ These use mocked PayPal responses and do not call Claude. GitHub Actions runs th
 
 `lib/store.ts` writes a JSON file (`STORE_FILE`, default `.data/store.json`), so as written the app needs **one long-running server with a persistent disk**, such as a small VPS, Fly.io, or Render with a volume. On serverless hosting such as Vercel the file does not persist and instances do not share it: results and payment records would be lost. To deploy there, replace `lib/store.ts` with a database; nothing else touches the file. The rate limiter in `lib/rate-limit.ts` is also per process.
 
-Rate limits are per client address taken from `x-forwarded-for`, so run behind a proxy that sets it, such as nginx or your host's load balancer. Without one, every visitor shares a single limit of 10 checks an hour.
+### Security
+
+- `npm start` and `npm run dev` listen on `127.0.0.1` only, so nobody on the same Wi-Fi can reach the app directly. Publish it through a proxy or tunnel, such as `cloudflared tunnel --url http://localhost:3000`.
+- Visitor addresses come from Cloudflare's `cf-connecting-ip`, which visitors cannot fake. Each visitor gets 10 checks an hour, and the whole site is capped (`SITE_CHECKS_PER_HOUR`, default 300) so nobody can drain the AI quota.
+- API routes accept only JSON, which blocks cross-site form posts, and cap body size while reading.
+- Strict security headers: a Content-Security-Policy that allows only this site and PayPal, HSTS, frame blocking, and no caching of result pages.
+- Keys live only in `.env.local`, which git ignores. Nothing secret is sent to the browser except the PayPal client ID, which PayPal designs to be public.
+- Dependabot opens pull requests for dependency security fixes.
 
 ### Before taking real money
 

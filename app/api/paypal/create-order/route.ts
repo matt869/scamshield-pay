@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { bodyError, DEFAULT_MAX_BODY, readJson } from "@/lib/http";
 import { z } from "zod";
 import { createOrder, KIT_CURRENCY, kitPrice, PayPalError, PayPalNotConfiguredError } from "@/lib/paypal";
 import { allowRequest, clientAddress, HOUR_MS } from "@/lib/rate-limit";
@@ -10,7 +11,9 @@ export async function POST(request: Request) {
   if (!allowRequest(`order:${clientAddress(request)}`, 20, HOUR_MS)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
-  const parsed = RequestSchema.safeParse(await request.json().catch(() => null));
+  const body = await readJson(request, DEFAULT_MAX_BODY);
+  if (!body.ok) return bodyError(body.status);
+  const parsed = RequestSchema.safeParse(body.value);
   if (!parsed.success) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
 
   const check = getCheck(parsed.data.checkId);

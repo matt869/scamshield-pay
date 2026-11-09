@@ -34,20 +34,27 @@ export async function geminiStructured<Schema extends z.ZodType>(
   prompt: string,
   image?: ImageInput,
 ): Promise<z.infer<Schema>> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new GeminiError("not_configured");
+  // A backup key has its own quota, so it takes over when the main key is used up or rejected.
+  const keys = [process.env.GEMINI_API_KEY, process.env.GEMINI_BACKUP_API_KEY].filter(
+    (value, i, all): value is string => !!value && all.indexOf(value) === i,
+  );
+  if (keys.length === 0) throw new GeminiError("not_configured");
   const { $schema: _dialect, ...jsonSchema } = z.toJSONSchema(schema) as Record<string, unknown>;
 
   // Free-tier quotas are per model, so a busy main model falls back to a lighter one.
   const models = [model(), fallbackModel()].filter((name, i, all): name is string => !!name && all.indexOf(name) === i);
   let lastError: GeminiError = new GeminiError("failed");
-  for (const name of models) {
-    try {
-      return await callModel(name, key, jsonSchema, schema, system, prompt, image);
-    } catch (error) {
-      if (!(error instanceof GeminiError)) throw error;
-      lastError = error;
-      if (error.reason !== "busy") throw error;
+  for (const key of keys) {
+    for (const name of models) {
+      try {
+        return await callModel(name, key, jsonSchema, schema, system, prompt, image);
+      } catch (error) {
+        if (!(error instanceof GeminiError)) throw error;
+        lastError = error;
+        // A rejected key cannot work with any model, so move to the next key.
+        if (error.reason === "not_configured") break;
+        if (error.reason !== "busy") throw error;
+      }
     }
   }
   throw lastError;

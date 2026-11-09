@@ -66,6 +66,31 @@ describe("gemini", () => {
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain("gemini-3.5-flash-lite:");
   });
 
+  it("moves to the backup key when the main key is used up on every model", async () => {
+    process.env.GEMINI_BACKUP_API_KEY = "backup-key";
+    const busy = () => new Response(JSON.stringify({ error: { status: "RESOURCE_EXHAUSTED" } }), { status: 429 });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(busy())
+      .mockResolvedValueOnce(busy())
+      .mockResolvedValueOnce(new Response(JSON.stringify(candidate(JSON.stringify(VALID))), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(geminiStructured(AnalysisSchema, "sys", "prompt")).resolves.toMatchObject({ risk: "high" });
+    const keysUsed = fetchMock.mock.calls.map((call) => (call[1] as RequestInit & { headers: Record<string, string> }).headers["x-goog-api-key"]);
+    expect(keysUsed).toEqual(["test-key", "test-key", "backup-key"]);
+    delete process.env.GEMINI_BACKUP_API_KEY;
+  });
+
+  it("moves to the backup key straight away when the main key is rejected", async () => {
+    process.env.GEMINI_BACKUP_API_KEY = "backup-key";
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: { status: "PERMISSION_DENIED" } }), { status: 403 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(candidate(JSON.stringify(VALID))), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(geminiStructured(AnalysisSchema, "sys", "prompt")).resolves.toMatchObject({ risk: "high" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    delete process.env.GEMINI_BACKUP_API_KEY;
+  });
+
   it("does not fall back on a safety block", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ promptFeedback: { blockReason: "SAFETY" } })));
     vi.stubGlobal("fetch", fetchMock);

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { bodyError, IMAGE_MAX_BODY, readJson } from "@/lib/http";
 import { z } from "zod";
 import { analyzeImage, analyzeMessage, ClaudeUnavailableError } from "@/lib/claude";
 import { isDemoMode } from "@/lib/demo";
-import { allowRequest, clientAddress, HOUR_MS } from "@/lib/rate-limit";
+import { allowCostly } from "@/lib/rate-limit";
 import { saveCheck, UNPAID_TTL_MS } from "@/lib/store";
 import {
   type Analysis,
@@ -22,11 +23,13 @@ const RequestSchema = z.union([
 ]);
 
 export async function POST(request: Request) {
-  if (!allowRequest(`analyze:${clientAddress(request)}`, 10, HOUR_MS)) {
+  if (!allowCostly(request, "analyze", 10, Number(process.env.SITE_CHECKS_PER_HOUR || 300))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const parsed = RequestSchema.safeParse(await request.json().catch(() => null));
+  const body = await readJson(request, IMAGE_MAX_BODY);
+  if (!body.ok) return bodyError(body.status);
+  const parsed = RequestSchema.safeParse(body.value);
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid_message" }, { status: 400 });
   }

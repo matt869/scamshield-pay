@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { bodyError, DEFAULT_MAX_BODY, readJson } from "@/lib/http";
 import { z } from "zod";
 import { t } from "@/lib/i18n";
 import {
@@ -8,7 +9,7 @@ import {
   PayPalError,
   PayPalNotConfiguredError,
 } from "@/lib/paypal";
-import { allowRequest, clientAddress, HOUR_MS } from "@/lib/rate-limit";
+import { allowCostly } from "@/lib/rate-limit";
 import { extendForInvoice, getCheck, rememberInvoice } from "@/lib/store";
 import { LanguageSchema } from "@/lib/types";
 
@@ -22,10 +23,12 @@ const RequestSchema = z.object({
 
 export async function POST(request: Request) {
   // PayPal emails whatever address is given here, so this route is kept on a short leash.
-  if (!allowRequest(`invoice:${clientAddress(request)}`, 5, HOUR_MS)) {
+  if (!allowCostly(request, "invoice", 5, 30)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
-  const parsed = RequestSchema.safeParse(await request.json().catch(() => null));
+  const body = await readJson(request, DEFAULT_MAX_BODY);
+  if (!body.ok) return bodyError(body.status);
+  const parsed = RequestSchema.safeParse(body.value);
   if (!parsed.success) return NextResponse.json({ error: "invalid_email" }, { status: 400 });
   const { checkId, email, language } = parsed.data;
 
