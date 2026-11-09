@@ -51,8 +51,12 @@ export function RedFlagList({
   reportLanguage: string;
 }) {
   const { copy } = useLanguage();
-  // Only flags that can be pointed at in the message get marks.
-  const quotes = flags.map((flag) => (flag.quote && findQuote(message, flag.quote) ? flag.quote : null));
+  // Numbered in reading order, so the marks run 1, 2, 3 down the message. Signs that cannot be
+  // pointed at in the message come last.
+  const ordered = flags
+    .map((flag) => ({ flag, at: flag.quote ? (findQuote(message, flag.quote)?.[0] ?? null) : null }))
+    .sort((a, b) => (a.at ?? Number.MAX_SAFE_INTEGER) - (b.at ?? Number.MAX_SAFE_INTEGER));
+  const quotes = ordered.map(({ flag, at }) => (at === null ? null : flag.quote));
 
   return (
     <section className="findings">
@@ -65,7 +69,7 @@ export function RedFlagList({
           <p>{copy.result.noFlags}</p>
         ) : (
           <ol className="flag-list" lang={reportLanguage}>
-            {flags.map((flag, index) => (
+            {ordered.map(({ flag }, index) => (
               <li key={index}>
                 <span className="flag-number" aria-hidden="true">
                   {index + 1}

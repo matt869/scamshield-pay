@@ -91,6 +91,16 @@ main:focus {
   left: -9999px;
 }
 
+.demo-banner {
+  margin: 0;
+  max-width: none;
+  padding: 10px var(--gutter);
+  background: var(--caution-ink);
+  color: #fff;
+  font-weight: 700;
+  font-size: 17px;
+}
+
 .skip-link:focus {
   left: 16px;
   top: 12px;
@@ -167,6 +177,8 @@ main:focus {
 }
 
 main {
+  /* The stamp grows briefly as it lands; this keeps that from scrolling the page sideways. */
+  overflow-x: clip;
   padding: clamp(28px, 5vw, 64px) var(--gutter);
   max-width: 1320px;
   margin: 0 auto;
@@ -368,6 +380,72 @@ input[aria-invalid="true"] {
   50% {
     opacity: 0.25;
   }
+}
+
+/* ---------- Message input extras ---------- */
+
+.paste-button {
+  margin-bottom: 12px;
+}
+
+.screenshot-upload {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 2px solid var(--rule);
+}
+
+.screenshot-title {
+  font-weight: 700;
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.file-button {
+  position: relative;
+  margin: 4px 0 0;
+  font-size: 20px;
+}
+
+/* The real file input stays usable by keyboard and screen readers, but invisible. */
+.file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+}
+
+.file-button:focus-within {
+  outline: 3px solid var(--ledger-ink);
+  outline-offset: 3px;
+}
+
+.screenshot-preview {
+  margin: 0 0 14px;
+  padding: 12px;
+  background: var(--cheque-white);
+  border: 2px solid var(--ledger-ink);
+}
+
+.screenshot-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  margin-bottom: 8px;
+}
+
+.share-result {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.share-result .fine-print {
+  margin: 6px 0 0;
 }
 
 /* ---------- Home ---------- */
@@ -863,6 +941,23 @@ tbody th {
 }
 
 @media (max-width: 560px) {
+  /* Two rows on a phone: brand and language, then the menu, so the form starts higher. */
+  .site-header {
+    padding-top: 8px;
+    padding-bottom: 4px;
+    gap: 0 12px;
+  }
+
+  .brand {
+    font-size: 18px;
+    gap: 8px;
+  }
+
+  .brand img {
+    width: 26px;
+    height: 26px;
+  }
+
   .site-header nav {
     order: 3;
     flex-basis: 100%;
@@ -870,6 +965,34 @@ tbody th {
 
   .language-toggle {
     margin-left: auto;
+  }
+
+  .language-toggle button {
+    padding: 0 10px;
+    font-size: 16px;
+  }
+
+  main {
+    padding-top: 20px;
+  }
+
+  .display {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .lead {
+    font-size: 19px;
+    margin-bottom: 4px;
+  }
+
+  .home-main .eyebrow {
+    margin-bottom: 6px;
+  }
+
+  .scam-input textarea {
+    min-height: 0;
+    height: 150px;
   }
 
   .button {

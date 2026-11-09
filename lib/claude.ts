@@ -2,16 +2,22 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import resources from "@/data/resources.json";
+import { demoAnalysis, demoDisputeKit, isDemoMode } from "./demo";
+import { GeminiError, geminiStructured } from "./gemini";
 import { applyGuardrails } from "./guardrails";
 import { buildDisputePrompt, DISPUTE_SYSTEM } from "./prompts/dispute-letter";
-import { buildClassifierPrompt, SCAM_CLASSIFIER_SYSTEM } from "./prompts/scam-classifier";
+import { buildClassifierPrompt, buildImagePrompt, SCAM_CLASSIFIER_SYSTEM } from "./prompts/scam-classifier";
 import {
   type Analysis,
   AnalysisSchema,
   type DisputeDetails,
   type DisputeKit,
   DisputeKitSchema,
+  type ImageInput,
+  ImageAnalysisSchema,
   type Language,
+  MESSAGE_MAX_CHARS,
+  MESSAGE_MIN_CHARS,
 } from "./types";
 
 export class ClaudeUnavailableError extends Error {
@@ -50,7 +56,17 @@ async function requestStructured<Schema extends z.ZodType>(
   schema: Schema,
   system: string,
   prompt: string,
+  image?: ImageInput,
 ): Promise<z.infer<Schema>> {
+  if (process.env.AI_PROVIDER === "gemini") {
+    try {
+      return await geminiStructured(schema, system, prompt, image);
+    } catch (error) {
+      if (error instanceof GeminiError) throw new ClaudeUnavailableError(error.reason, { cause: error });
+      throw new ClaudeUnavailableError("failed", { cause: error });
+    }
+  }
+
   let response;
   try {
     response = await getClient().beta.messages.parse({
@@ -59,7 +75,17 @@ async function requestStructured<Schema extends z.ZodType>(
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       system,
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        {
+          role: "user",
+          content: [
+            ...(image
+              ? [{ type: "image" as const, source: { type: "base64" as const, media_type: image.mediaType, data: image.data } }]
+              : []),
+            { type: "text" as const, text: prompt },
+          ],
+        },
+      ],
       output_config: { effort: "medium", format: strictOutputFormat(schema) },
     });
   } catch (error) {
@@ -89,6 +115,7 @@ async function requestStructured<Schema extends z.ZodType>(
 }
 
 export async function analyzeMessage(message: string, language: Language): Promise<Analysis> {
+  if (isDemoMode()) return applyGuardrails(demoAnalysis(message, language), message, language);
   const analysis = await requestStructured(
     AnalysisSchema,
     SCAM_CLASSIFIER_SYSTEM,
@@ -97,11 +124,32 @@ export async function analyzeMessage(message: string, language: Language): Promi
   return applyGuardrails(analysis, message, language);
 }
 
+/**
+ * Checks a screenshot. The model reads the message in the image, then judges it like pasted text,
+ * and the same guardrails run on what it read.
+ */
+export async function analyzeImage(
+  image: ImageInput,
+  language: Language,
+): Promise<{ message: string; analysis: Analysis } | null> {
+  if (isDemoMode()) throw new ClaudeUnavailableError("not_configured");
+  const { message_text, ...analysis } = await requestStructured(
+    ImageAnalysisSchema,
+    SCAM_CLASSIFIER_SYSTEM,
+    buildImagePrompt(language),
+    image,
+  );
+  const message = message_text.trim().slice(0, MESSAGE_MAX_CHARS);
+  if (message.length < MESSAGE_MIN_CHARS) return null;
+  return { message, analysis: applyGuardrails(analysis, message, language) };
+}
+
 export async function generateDisputeKit(
   message: string,
   details: DisputeDetails,
   language: Language,
 ): Promise<DisputeKit> {
+  if (isDemoMode()) return demoDisputeKit(details, language);
   const guidance = resources.paymentGuidance.find((entry) =>
     entry.methods.includes(details.paymentMethod),
   );

@@ -3,6 +3,7 @@ import { Archivo, Atkinson_Hyperlegible_Next } from "next/font/google";
 import type { ReactNode } from "react";
 import { LanguageProvider } from "@/components/LanguageToggle";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
+import { isDemoMode } from "@/lib/demo";
 import { t } from "@/lib/i18n";
 import { resolveLanguage } from "@/lib/language-server";
 import "./globals.css";
@@ -29,7 +30,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang={language} className={`${display.variable} ${body.variable}`}>
       <body>
         <LanguageProvider initial={language}>
-          <SiteHeader />
+          <SiteHeader demo={isDemoMode()} />
           <main id="main" tabIndex={-1}>
             {children}
           </main>

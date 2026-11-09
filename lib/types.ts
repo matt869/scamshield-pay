@@ -46,6 +46,18 @@ export const AnalysisSchema = z.object({
   next_steps: z.array(z.string()),
 });
 export type Analysis = z.infer<typeof AnalysisSchema>;
+
+/** For a screenshot: the model also writes down the message it can see, which the page then marks up. */
+export const ImageAnalysisSchema = AnalysisSchema.extend({ message_text: z.string() });
+
+export const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
+/** Base64 characters, about 3 MB of image. The browser shrinks screenshots well below this. */
+export const IMAGE_MAX_BASE64 = 4_000_000;
+export const ImageInputSchema = z.object({
+  mediaType: z.enum(IMAGE_TYPES),
+  data: z.string().min(100).max(IMAGE_MAX_BASE64).regex(/^[A-Za-z0-9+/]+=*$/),
+});
+export type ImageInput = z.infer<typeof ImageInputSchema>;
 export type RedFlag = Analysis["red_flags"][number];
 
 export const DisputeKitSchema = z.object({

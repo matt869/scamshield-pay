@@ -4,10 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LanguageToggle, useLanguage } from "./LanguageToggle";
 
-export function SiteHeader() {
+export function SiteHeader({ demo = false }: { demo?: boolean }) {
   const { copy } = useLanguage();
   const pathname = usePathname();
   return (
+    <>
+    {demo && (
+      <p className="demo-banner" role="note">
+        {copy.footer.demo}
+      </p>
+    )}
     <header className="site-header">
       <a className="skip-link" href="#main">
         {copy.nav.skip}
@@ -27,6 +33,7 @@ export function SiteHeader() {
       </nav>
       <LanguageToggle />
     </header>
+    </>
   );
 }
 

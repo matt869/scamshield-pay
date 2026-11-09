@@ -4,7 +4,7 @@
 
 Paste a suspicious text or email and get a free, plain-language verdict before any money moves. People who already paid get a free step-by-step guide, and can buy a dispute kit: a letter, a phone script, and an evidence checklist written for their case.
 
-English and Spanish. Built with Next.js, Claude, and PayPal.
+English and Spanish. Built with Next.js, PayPal, and Claude or Google Gemini.
 
 ![A result page: a red "Stop. Do not pay." stamp above the reader's message, with each warning sign highlighted, numbered, and explained alongside](docs/screenshots/result.png)
 
@@ -27,14 +27,17 @@ npm run dev                  # http://localhost:3000
 
 | Variable | Needed for | Where to get it |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | Checks and dispute kits | [Claude Console](https://platform.claude.com/) |
+| `AI_PROVIDER` | `gemini` or `claude` (default) | Your choice |
+| `GEMINI_API_KEY` | Checks and dispute kits with Gemini, free tier | [Google AI Studio](https://aistudio.google.com/apikey) |
+| `ANTHROPIC_API_KEY` | Checks and dispute kits with Claude | [Claude Console](https://platform.claude.com/) |
+| `DEMO_MODE` | `true` runs without any AI, using labelled pattern rules | Testing only |
 | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | Taking payment | [PayPal developer dashboard](https://developer.paypal.com/dashboard/applications), Sandbox app to start |
 | `PAYPAL_WEBHOOK_ID` | Invoices, pending payments, refunds | See "PayPal webhook" below |
 | `PAYPAL_ENV` | `sandbox` or `live` | Defaults to sandbox |
 | `APP_URL` | The link inside invoice emails | Your public URL |
 | `KIT_PRICE_USD` | Kit price, like `9.00` | Your decision |
 
-Without Claude credentials the check reports that it is unavailable and tells the reader not to pay yet. Without PayPal credentials the pay page says payments are unavailable. The help page needs neither.
+Without AI credentials the check reports that it is unavailable and tells the reader not to pay yet. Without PayPal credentials the pay page says payments are unavailable. The help page needs neither.
 
 ### PayPal webhook
 

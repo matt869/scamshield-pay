@@ -5,6 +5,7 @@ import type { PublicCheck } from "@/lib/types";
 import { useLanguage } from "./LanguageToggle";
 import { RedFlagList } from "./RedFlagList";
 import { RiskVerdict } from "./RiskVerdict";
+import { ShareResult } from "./ShareResult";
 
 export function ResultView({ check, price }: { check: PublicCheck; price: string }) {
   const { language, copy } = useLanguage();
@@ -26,6 +27,8 @@ export function ResultView({ check, price }: { check: PublicCheck; price: string
           ))}
         </ol>
       </section>
+
+      <ShareResult verdict={copy.verdict[analysis.risk]} headline={analysis.headline} />
 
       <section className="already-paid">
         <div>
