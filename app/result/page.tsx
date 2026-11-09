@@ -15,7 +15,7 @@ export default async function ResultPage({
   searchParams: Promise<{ id?: string | string[] }>;
 }) {
   const { id } = await searchParams;
-  const check = typeof id === "string" ? getCheck(id) : null;
+  const check = typeof id === "string" ? await getCheck(id) : null;
   if (!check) return <NotFoundView />;
   return <ResultView check={toPublicCheck(check)} price={kitPrice()} />;
 }

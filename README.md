@@ -92,9 +92,26 @@ npm run typecheck
 
 These use mocked PayPal responses and do not call Claude. GitHub Actions runs the type check, tests, and a production build on every push.
 
+## Deploying to Cloudflare (free)
+
+The app runs on Cloudflare Workers, with data in Cloudflare D1, so it stays up when your computer is off.
+
+```bash
+npx wrangler login                                        # once
+npx wrangler d1 create scamshield-pay                     # once; put the id in wrangler.jsonc
+npx wrangler d1 migrations apply scamshield-pay --remote  # once, and after new migrations
+npx wrangler secret put PAYPAL_CLIENT_ID                  # and PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID,
+                                                          # GEMINI_API_KEY, GEMINI_BACKUP_API_KEY
+npm run cf:deploy                                         # build and publish
+```
+
+Keys are stored as encrypted Cloudflare secrets and never appear in `wrangler.jsonc` or git. Non-secret settings, such as `AI_PROVIDER` and `PAYPAL_ENV`, are under `vars` in `wrangler.jsonc`. Point the PayPal webhook at `https://<your-worker>.workers.dev/api/paypal/webhook`.
+
+The free Workers plan allows 3 MB of compressed code (this app is about 1.4 MB) and limited CPU time per request; the Gemini wait does not count toward it.
+
 ## Deploying
 
-`lib/store.ts` writes a JSON file (`STORE_FILE`, default `.data/store.json`), so as written the app needs **one long-running server with a persistent disk**, such as a small VPS, Fly.io, or Render with a volume. On serverless hosting such as Vercel the file does not persist and instances do not share it: results and payment records would be lost. To deploy there, replace `lib/store.ts` with a database; nothing else touches the file. The rate limiter in `lib/rate-limit.ts` is also per process.
+Outside Cloudflare, `lib/store.ts` writes a JSON file (`STORE_FILE`, default `.data/store.json`), so as written the app needs **one long-running server with a persistent disk**, such as a small VPS, Fly.io, or Render with a volume. On serverless hosting such as Vercel the file does not persist and instances do not share it: results and payment records would be lost. To deploy there, replace `lib/store.ts` with a database; nothing else touches the file. The rate limiter in `lib/rate-limit.ts` is also per process.
 
 ### Security
 

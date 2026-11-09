@@ -8,7 +8,7 @@ import { getCheck, rememberOrder } from "@/lib/store";
 const RequestSchema = z.object({ checkId: z.string().uuid() });
 
 export async function POST(request: Request) {
-  if (!allowRequest(`order:${clientAddress(request)}`, 20, HOUR_MS)) {
+  if (!(await allowRequest(`order:${clientAddress(request)}`, 20, HOUR_MS))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
   const body = await readJson(request, DEFAULT_MAX_BODY);
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const parsed = RequestSchema.safeParse(body.value);
   if (!parsed.success) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
 
-  const check = getCheck(parsed.data.checkId);
+  const check = await getCheck(parsed.data.checkId);
   if (!check) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (check.paymentStatus === "paid") return NextResponse.json({ error: "already_paid" }, { status: 409 });
   if (check.paymentStatus === "revoked") return NextResponse.json({ error: "payment_revoked" }, { status: 409 });

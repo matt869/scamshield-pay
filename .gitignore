@@ -15,3 +15,8 @@ next-env.d.ts
 
 npm-debug.log*
 .DS_Store
+
+# Cloudflare build output and local secrets
+.open-next/
+.wrangler/
+.dev.vars

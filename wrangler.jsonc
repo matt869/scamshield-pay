@@ -1,0 +1,30 @@
+{
+  // Cloudflare Workers deployment. Secrets (PayPal and Gemini keys) are NOT here:
+  // they are stored encrypted in Cloudflare with `wrangler secret`, never in git.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "scamshield-pay",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "scamshield-pay",
+      "database_id": "4b44be7d-5af4-451b-b702-ba7e908b9052",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "STORE_BACKEND": "d1",
+    "AI_PROVIDER": "gemini",
+    "PAYPAL_ENV": "sandbox",
+    "KIT_PRICE_USD": "9.00"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

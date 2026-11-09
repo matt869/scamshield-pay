@@ -23,7 +23,7 @@ const RequestSchema = z.union([
 ]);
 
 export async function POST(request: Request) {
-  if (!allowCostly(request, "analyze", 10, Number(process.env.SITE_CHECKS_PER_HOUR || 300))) {
+  if (!(await allowCostly(request, "analyze", 10, Number(process.env.SITE_CHECKS_PER_HOUR || 300)))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 

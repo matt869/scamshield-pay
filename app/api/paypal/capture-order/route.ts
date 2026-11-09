@@ -15,7 +15,7 @@ import { getCheck, getOrderRef, markPaid } from "@/lib/store";
 const RequestSchema = z.object({ orderId: z.string().min(1).max(64) });
 
 export async function POST(request: Request) {
-  if (!allowRequest(`capture:${clientAddress(request)}`, 30, HOUR_MS)) {
+  if (!(await allowRequest(`capture:${clientAddress(request)}`, 30, HOUR_MS))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
   const body = await readJson(request, DEFAULT_MAX_BODY);
@@ -25,9 +25,9 @@ export async function POST(request: Request) {
   const { orderId } = parsed.data;
 
   // Only orders we created can unlock anything, and the check comes from our record of the order.
-  const ref = getOrderRef(orderId);
+  const ref = await getOrderRef(orderId);
   if (!ref) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const check = getCheck(ref.checkId);
+  const check = await getCheck(ref.checkId);
   if (!check) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (check.paymentStatus === "paid") {
     return NextResponse.json({ status: "completed", checkId: check.id });

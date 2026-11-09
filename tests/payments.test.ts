@@ -155,7 +155,7 @@ describe("create-order", () => {
     const sent = JSON.parse(String(fetchMock.mock.calls.at(-1)?.[1]?.body));
     expect(sent.purchase_units[0].amount).toEqual({ currency_code: "USD", value: "9.00" });
     expect(sent.purchase_units[0].custom_id).toBe(CHECK_ID);
-    expect(getOrderRef("ORDER1")).toEqual(EXPECTED);
+    expect(await getOrderRef("ORDER1")).toEqual(EXPECTED);
   });
 });
 
@@ -168,7 +168,7 @@ describe("capture-order", () => {
     const response = await capturePost(post("/api/paypal/capture-order", { orderId: "ORDER1" }));
 
     expect(await response.json()).toEqual({ status: "completed", checkId: CHECK_ID });
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("paid");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("paid");
     const headers = fetchMock.mock.calls.at(-1)?.[1]?.headers as Record<string, string>;
     expect(headers["PayPal-Request-Id"]).toBe("capture-ORDER1");
   });
@@ -181,7 +181,7 @@ describe("capture-order", () => {
 
     expect(response.status).toBe(404);
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("none");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("none");
   });
 
   it("does not unlock when the captured amount is wrong", async () => {
@@ -192,7 +192,7 @@ describe("capture-order", () => {
     const response = await capturePost(post("/api/paypal/capture-order", { orderId: "ORDER1" }));
 
     expect(response.status).toBe(402);
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("none");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("none");
   });
 
   it("does not unlock while the capture is pending", async () => {
@@ -203,7 +203,7 @@ describe("capture-order", () => {
     const response = await capturePost(post("/api/paypal/capture-order", { orderId: "ORDER1" }));
 
     expect(await response.json()).toMatchObject({ status: "pending" });
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("none");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("none");
   });
 
   it("tells the browser to restart checkout on a declined instrument", async () => {
@@ -229,7 +229,7 @@ describe("capture-order", () => {
     const response = await capturePost(post("/api/paypal/capture-order", { orderId: "ORDER1" }));
 
     expect(response.status).toBe(200);
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("paid");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("paid");
   });
 
   it("takes no more money for a refunded check", async () => {
@@ -272,7 +272,7 @@ describe("webhook", () => {
     const response = await webhookPost(post("/api/paypal/webhook", completed, SIGNED));
 
     expect(response.status).toBe(400);
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("none");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("none");
   });
 
   it("refuses unsigned events without calling PayPal", async () => {
@@ -284,7 +284,7 @@ describe("webhook", () => {
 
     expect(response.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("none");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("none");
   });
 
   it("refuses every event when no webhook ID is configured", async () => {
@@ -296,7 +296,7 @@ describe("webhook", () => {
     const response = await webhookPost(post("/api/paypal/webhook", completed, SIGNED));
 
     expect(response.status).toBe(503);
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("none");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("none");
   });
 
   it("sends the raw event body back for verification, unchanged", async () => {
@@ -320,7 +320,7 @@ describe("webhook", () => {
     const response = await webhookPost(post("/api/paypal/webhook", completed, SIGNED));
 
     expect(response.status).toBe(200);
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("paid");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("paid");
   });
 
   it("stays revoked if a completed event is replayed after a refund", async () => {
@@ -338,10 +338,10 @@ describe("webhook", () => {
       },
     });
     await webhookPost(post("/api/paypal/webhook", refund, SIGNED));
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("revoked");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("revoked");
 
     await webhookPost(post("/api/paypal/webhook", completed, SIGNED));
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("revoked");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("revoked");
   });
 
   it("keeps access after a partial refund", async () => {
@@ -360,7 +360,7 @@ describe("webhook", () => {
     });
     await webhookPost(post("/api/paypal/webhook", refund, SIGNED));
 
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("paid");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("paid");
   });
 
   it.each([
@@ -384,7 +384,7 @@ describe("webhook", () => {
     const response = await webhookPost(post("/api/paypal/webhook", event, SIGNED));
 
     expect(response.status).toBe(200);
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe(expected);
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe(expected);
   });
 });
 
@@ -402,7 +402,7 @@ describe("dispute", () => {
     await saveCheck(check());
     const response = await disputePost(post("/api/dispute", { checkId: CHECK_ID, language: "en", details }));
     expect(response.status).toBe(402);
-    expect(getCheck(CHECK_ID)?.disputeGenerations).toBe(0);
+    expect((await getCheck(CHECK_ID))?.disputeGenerations).toBe(0);
   });
 
   it("closes the kit after a refund", async () => {
@@ -429,7 +429,7 @@ describe("refunds after a price change", () => {
         : jsonResponse(capturedOrder()),
     );
     await capturePost(post("/api/paypal/capture-order", { orderId: "ORDER1" }));
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("paid");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("paid");
 
     const refund = JSON.stringify({
       event_type: "PAYMENT.CAPTURE.REFUNDED",
@@ -441,7 +441,7 @@ describe("refunds after a price change", () => {
     });
     await webhookPost(post("/api/paypal/webhook", refund, SIGNED));
 
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("revoked");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("revoked");
   });
 });
 
@@ -454,7 +454,7 @@ describe("store", () => {
     fs.rmSync(file);
     fs.mkdirSync(file);
     await markPaid(CHECK_ID);
-    expect(getCheck(CHECK_ID)?.paymentStatus).toBe("paid");
+    expect((await getCheck(CHECK_ID))?.paymentStatus).toBe("paid");
 
     fs.rmSync(file, { recursive: true });
     await markRevoked(CHECK_ID);
@@ -472,7 +472,7 @@ describe("store", () => {
 
   it("hides and purges expired checks", async () => {
     await saveCheck(check({ expiresAt: Date.now() - 1 }));
-    expect(getCheck(CHECK_ID)).toBeNull();
+    expect(await getCheck(CHECK_ID)).toBeNull();
 
     const other = "22222222-2222-4222-8222-222222222222";
     await saveCheck(check({ id: other }));

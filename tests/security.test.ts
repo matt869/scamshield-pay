@@ -47,6 +47,22 @@ describe("request bodies", () => {
   });
 });
 
+describe("rate limits on the real route", () => {
+  it("stops the 11th check in an hour from the same visitor", async () => {
+    process.env.DEMO_MODE = "true";
+    const ip = `198.51.100.${Math.floor(Math.random() * 250)}`;
+    const statuses: number[] = [];
+    for (let i = 0; i < 11; i++) {
+      const response = await analyze(
+        req(JSON.stringify({ message: "x", language: "en" }), { "content-type": "application/json", "cf-connecting-ip": ip }),
+      );
+      statuses.push(response.status);
+    }
+    expect(statuses.slice(0, 10).every((status) => status !== 429)).toBe(true);
+    expect(statuses[10]).toBe(429);
+  });
+});
+
 describe("visitor address", () => {
   const headers = (h: Record<string, string>) => new Request("http://localhost", { headers: h });
 
@@ -58,11 +74,12 @@ describe("visitor address", () => {
     expect(clientAddress(headers({ "x-forwarded-for": "1.2.3.4, 198.51.100.7" }))).toBe("198.51.100.7");
   });
 
-  it("caps the whole site even when every request comes from a new address", () => {
+  it("caps the whole site even when every request comes from a new address", async () => {
     const route = `test-${crypto.randomUUID()}`;
-    const results = Array.from({ length: 8 }, (_, i) =>
-      allowCostly(headers({ "cf-connecting-ip": `203.0.113.${i}` }), route, 10, 5),
-    );
+    const results: boolean[] = [];
+    for (let i = 0; i < 8; i++) {
+      results.push(await allowCostly(headers({ "cf-connecting-ip": `203.0.113.${i}` }), route, 10, 5));
+    }
     expect(results.filter(Boolean)).toHaveLength(5);
   });
 });

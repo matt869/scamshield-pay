@@ -1,11 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
 import type { CheckRecord } from "./types";
 
 /**
- * A JSON file behind an in-memory copy. It suits one long-running server process with a
- * persistent disk. For several instances or serverless hosting, replace this module with a
- * database; nothing else in the app touches the file.
+ * Where checks, payment references, and rate-limit counters live.
+ *
+ * - On Cloudflare Workers (STORE_BACKEND=d1): the D1 database, see store-d1.ts.
+ * - Anywhere else: a JSON file behind an in-memory copy, which suits one long-running server
+ *   process with a persistent disk.
  *
  * Messages are sensitive, so records expire: see the TTLs below.
  */
@@ -25,17 +25,27 @@ export interface InvoiceRef {
   currency: string;
 }
 
+/** PayPal capture ID to what it paid for, so refunds can find what they reverse. */
+export interface CaptureRef {
+  checkId: string;
+  amount: string;
+}
+
+function usingD1(): boolean {
+  return process.env.STORE_BACKEND === "d1";
+}
+
+async function d1() {
+  return import("./store-d1");
+}
+
+// ---------- File backend ----------
+
 interface StoreData {
   checks: Record<string, CheckRecord>;
   orders: Record<string, OrderRef>;
   invoices: Record<string, InvoiceRef>;
-  /** PayPal capture ID to what it paid for, so refunds can find what they reverse. */
   captures: Record<string, CaptureRef>;
-}
-
-export interface CaptureRef {
-  checkId: string;
-  amount: string;
 }
 
 interface StoreState {
@@ -55,7 +65,13 @@ function emptyData(): StoreData {
 // On globalThis because Next.js can bundle this module once per route.
 const globalForStore = globalThis as typeof globalThis & { __scamshieldStore?: StoreState };
 
-function state(): StoreState {
+async function fsModules() {
+  const [fs, path] = await Promise.all([import("node:fs"), import("node:path")]);
+  return { fs: fs.default, path: path.default };
+}
+
+async function state(): Promise<StoreState> {
+  const { fs, path } = await fsModules();
   const file = path.resolve(/*turbopackIgnore: true*/ process.env.STORE_FILE || ".data/store.json");
   let current = globalForStore.__scamshieldStore;
   if (!current || current.file !== file) {
@@ -84,15 +100,16 @@ function state(): StoreState {
   return current;
 }
 
-function persist(current: StoreState): Promise<void> {
-  if (current.persistenceDisabled) return Promise.resolve();
+async function persist(current: StoreState): Promise<void> {
+  if (current.persistenceDisabled) return;
+  const { fs, path } = await fsModules();
   const snapshot = JSON.stringify(current.data);
   current.writeQueue = current.writeQueue.then(async () => {
     try {
       await fs.promises.mkdir(path.dirname(current.file), { recursive: true });
       const temp = `${current.file}.${process.pid}.tmp`;
       await fs.promises.writeFile(temp, snapshot, { mode: 0o600 });
-      await renameWithRetry(temp, current.file);
+      await renameWithRetry(fs, temp, current.file);
       if (current.writeFailing) console.error("store: writing the store file works again");
       current.writeFailing = false;
     } catch (error) {
@@ -110,7 +127,7 @@ function persist(current: StoreState): Promise<void> {
 }
 
 /** On Windows a rename fails briefly while another process, such as antivirus, has the file open. */
-async function renameWithRetry(from: string, to: string): Promise<void> {
+async function renameWithRetry(fs: typeof import("node:fs"), from: string, to: string): Promise<void> {
   for (let attempt = 0; ; attempt++) {
     try {
       await fs.promises.rename(from, to);
@@ -139,15 +156,36 @@ function purgeExpired(current: StoreState, now: number): void {
   }
 }
 
+// ---------- Shared helpers for the D1 backend ----------
+
+async function d1Read<T>(key: string): Promise<T | null> {
+  const raw = await (await d1()).d1Get(key, Date.now());
+  return raw ? (JSON.parse(raw) as T) : null;
+}
+
+async function d1Write(key: string, value: unknown, expiresAt: number): Promise<void> {
+  await (await d1()).d1Put(key, JSON.stringify(value), expiresAt);
+}
+
+// ---------- Public API ----------
+
 export async function saveCheck(record: CheckRecord): Promise<void> {
-  const current = state();
+  if (usingD1()) {
+    const store = await d1();
+    // Cheap enough to do on every save, and it keeps deleted messages deleted.
+    await store.d1Purge(Date.now());
+    await d1Write(`check:${record.id}`, record, record.expiresAt);
+    return;
+  }
+  const current = await state();
   purgeExpired(current, Date.now());
   current.data.checks[record.id] = record;
   await persist(current);
 }
 
-export function getCheck(id: string, now = Date.now()): CheckRecord | null {
-  const check = state().data.checks[id];
+export async function getCheck(id: string, now = Date.now()): Promise<CheckRecord | null> {
+  if (usingD1()) return d1Read<CheckRecord>(`check:${id}`);
+  const check = (await state()).data.checks[id];
   return check && check.expiresAt > now ? check : null;
 }
 
@@ -156,36 +194,44 @@ export async function updateCheck(
   id: string,
   change: (check: CheckRecord) => void,
 ): Promise<CheckRecord | null> {
-  const current = state();
-  const check = getCheck(id);
+  const check = await getCheck(id);
   if (!check) return null;
   change(check);
-  await persist(current);
+  if (usingD1()) {
+    await d1Write(`check:${id}`, check, check.expiresAt);
+  } else {
+    await persist(await state());
+  }
   return check;
 }
 
 export async function rememberOrder(orderId: string, ref: OrderRef): Promise<void> {
-  const current = state();
+  if (usingD1()) return d1Write(`order:${orderId}`, ref, Date.now() + PAID_TTL_MS);
+  const current = await state();
   current.data.orders[orderId] = ref;
   await persist(current);
 }
 
-export function getOrderRef(orderId: string): OrderRef | null {
-  return state().data.orders[orderId] ?? null;
+export async function getOrderRef(orderId: string): Promise<OrderRef | null> {
+  if (usingD1()) return d1Read<OrderRef>(`order:${orderId}`);
+  return (await state()).data.orders[orderId] ?? null;
 }
 
 export async function rememberInvoice(invoiceId: string, ref: InvoiceRef): Promise<void> {
-  const current = state();
+  if (usingD1()) return d1Write(`invoice:${invoiceId}`, ref, Date.now() + PAID_TTL_MS);
+  const current = await state();
   current.data.invoices[invoiceId] = ref;
   await persist(current);
 }
 
-export function getInvoiceRef(invoiceId: string): InvoiceRef | null {
-  return state().data.invoices[invoiceId] ?? null;
+export async function getInvoiceRef(invoiceId: string): Promise<InvoiceRef | null> {
+  if (usingD1()) return d1Read<InvoiceRef>(`invoice:${invoiceId}`);
+  return (await state()).data.invoices[invoiceId] ?? null;
 }
 
-export function getCaptureRef(captureId: string): CaptureRef | null {
-  return state().data.captures[captureId] ?? null;
+export async function getCaptureRef(captureId: string): Promise<CaptureRef | null> {
+  if (usingD1()) return d1Read<CaptureRef>(`capture:${captureId}`);
+  return (await state()).data.captures[captureId] ?? null;
 }
 
 /**
@@ -196,8 +242,11 @@ export async function markPaid(
   checkId: string,
   capture?: { id: string; amount: string },
 ): Promise<CheckRecord | null> {
-  const current = state();
-  if (capture) current.data.captures[capture.id] = { checkId, amount: capture.amount };
+  if (capture) {
+    const ref: CaptureRef = { checkId, amount: capture.amount };
+    if (usingD1()) await d1Write(`capture:${capture.id}`, ref, Date.now() + PAID_TTL_MS);
+    else (await state()).data.captures[capture.id] = ref;
+  }
   return updateCheck(checkId, (check) => {
     if (check.paymentStatus === "revoked") return;
     if (check.paymentStatus !== "paid") check.paidAt = Date.now();
@@ -220,7 +269,33 @@ export async function extendForInvoice(checkId: string): Promise<CheckRecord | n
   });
 }
 
+/** Counts one request against a fixed window and returns the count so far. */
+export async function countHit(key: string, windowMs: number, now = Date.now()): Promise<number> {
+  if (usingD1()) return (await d1()).d1Hit(key, windowMs, now);
+  return memoryHit(key, windowMs, now);
+}
+
+type Window = { count: number; resetAt: number };
+const globalForLimits = globalThis as typeof globalThis & { __scamshieldLimits?: Map<string, Window> };
+
+function memoryHit(key: string, windowMs: number, now: number): number {
+  const windows = (globalForLimits.__scamshieldLimits ??= new Map<string, Window>());
+  if (windows.size > 10_000) {
+    for (const [storedKey, window] of windows) {
+      if (window.resetAt <= now) windows.delete(storedKey);
+    }
+  }
+  const current = windows.get(key);
+  if (!current || current.resetAt <= now) {
+    windows.set(key, { count: 1, resetAt: now + windowMs });
+    return 1;
+  }
+  current.count += 1;
+  return current.count;
+}
+
 /** Test helper: flushes pending writes. */
-export function storeIdle(): Promise<void> {
-  return state().writeQueue;
+export async function storeIdle(): Promise<void> {
+  if (usingD1()) return;
+  return (await state()).writeQueue;
 }

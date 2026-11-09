@@ -1,32 +1,18 @@
+import { countHit } from "./store";
+
 /**
- * Fixed-window limiter kept in process memory. It protects the AI bill and quota, and stops the
- * invoice route being used to send email to strangers. Counters reset on restart and are per process.
+ * Fixed-window limits. They protect the AI quota and stop the invoice route being used to send
+ * email to strangers. On Cloudflare the counters live in D1 and are shared by every server; on a
+ * single machine they are kept in memory and reset on restart.
  */
-type Window = { count: number; resetAt: number };
-
-const globalForLimits = globalThis as typeof globalThis & { __scamshieldLimits?: Map<string, Window> };
-const windows = (globalForLimits.__scamshieldLimits ??= new Map<string, Window>());
-
-export function allowRequest(key: string, limit: number, windowMs: number, now = Date.now()): boolean {
-  if (windows.size > 10_000) {
-    for (const [storedKey, window] of windows) {
-      if (window.resetAt <= now) windows.delete(storedKey);
-    }
-  }
-  const current = windows.get(key);
-  if (!current || current.resetAt <= now) {
-    windows.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  if (current.count >= limit) return false;
-  current.count += 1;
-  return true;
+export async function allowRequest(key: string, limit: number, windowMs: number, now = Date.now()): Promise<boolean> {
+  return (await countHit(key, windowMs, now)) <= limit;
 }
 
 /**
  * The visitor's address. Behind Cloudflare, `cf-connecting-ip` is set by Cloudflare itself and
  * cannot be faked by the visitor, unlike `x-forwarded-for`, where the first entry is whatever the
- * visitor sent. This is only trustworthy when the app is reachable solely through the proxy, which
+ * visitor sent. This is only trustworthy when the app is reachable solely through Cloudflare, which
  * is why `npm start` listens on 127.0.0.1.
  */
 export function clientAddress(request: Request): string {
@@ -42,10 +28,10 @@ export function clientAddress(request: Request): string {
  * A per-visitor limit plus a site-wide ceiling. The ceiling stops one person rotating addresses from
  * using up the whole AI quota.
  */
-export function allowCostly(request: Request, route: string, perVisitor: number, siteWide: number): boolean {
+export async function allowCostly(request: Request, route: string, perVisitor: number, siteWide: number): Promise<boolean> {
   return (
-    allowRequest(`${route}:${clientAddress(request)}`, perVisitor, HOUR_MS) &&
-    allowRequest(`${route}:site`, siteWide, HOUR_MS)
+    (await allowRequest(`${route}:${clientAddress(request)}`, perVisitor, HOUR_MS)) &&
+    (await allowRequest(`${route}:site`, siteWide, HOUR_MS))
   );
 }
 

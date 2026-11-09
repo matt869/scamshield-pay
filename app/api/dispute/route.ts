@@ -15,7 +15,7 @@ const RequestSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  if (!allowCostly(request, "dispute", 10, 100)) {
+  if (!(await allowCostly(request, "dispute", 10, 100))) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   }
   const { checkId, language, details } = parsed.data;
 
-  const check = getCheck(checkId);
+  const check = await getCheck(checkId);
   if (!check) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (check.paymentStatus !== "paid") {
     return NextResponse.json({ error: "payment_required" }, { status: 402 });

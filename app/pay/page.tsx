@@ -16,7 +16,7 @@ export default async function PayPage({
   searchParams: Promise<{ id?: string | string[] }>;
 }) {
   const { id } = await searchParams;
-  const check = typeof id === "string" ? getCheck(id) : null;
+  const check = typeof id === "string" ? await getCheck(id) : null;
   if (!check) return <NotFoundView />;
   if (check.paymentStatus === "paid") redirect(`/success?id=${check.id}`);
   return (

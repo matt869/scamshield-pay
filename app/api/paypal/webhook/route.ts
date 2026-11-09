@@ -75,7 +75,7 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
   switch (event.event_type) {
     case "PAYMENT.CAPTURE.COMPLETED": {
       const orderId = resource.supplementary_data?.related_ids?.order_id;
-      const ref = orderId ? getOrderRef(orderId) : null;
+      const ref = orderId ? await getOrderRef(orderId) : null;
       if (!ref || !resource.id) return;
       if (resource.custom_id && resource.custom_id !== ref.checkId) return;
       const amount = resource.amount;
@@ -88,13 +88,13 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
     }
 
     case "PAYMENT.CAPTURE.REVERSED": {
-      const paid = findPaymentForCaptureEvent(event);
+      const paid = await findPaymentForCaptureEvent(event);
       if (paid) await markRevoked(paid.checkId);
       return;
     }
 
     case "PAYMENT.CAPTURE.REFUNDED": {
-      const paid = findPaymentForCaptureEvent(event);
+      const paid = await findPaymentForCaptureEvent(event);
       if (!paid) return;
       // A partial, goodwill refund leaves the customer's kit in place. "Full" is measured against
       // what this customer paid, not today's price.
@@ -106,7 +106,7 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
 
     case "INVOICING.INVOICE.PAID": {
       const invoiceId = resource.id ?? resource.invoice?.id;
-      const ref = invoiceId ? getInvoiceRef(invoiceId) : null;
+      const ref = invoiceId ? await getInvoiceRef(invoiceId) : null;
       if (!invoiceId || !ref) return;
       // This event also fires for partial and pending payments, so PayPal's current state decides.
       const invoice = await getInvoice(invoiceId);
@@ -121,7 +121,7 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
 
     case "INVOICING.INVOICE.REFUNDED": {
       const invoiceId = resource.id ?? resource.invoice?.id;
-      const ref = invoiceId ? getInvoiceRef(invoiceId) : null;
+      const ref = invoiceId ? await getInvoiceRef(invoiceId) : null;
       if (!invoiceId || !ref) return;
       const invoice = await getInvoice(invoiceId);
       if (invoice.status === "REFUNDED") await markRevoked(ref.checkId);
@@ -134,10 +134,10 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
 }
 
 /** Refund and reversal events point back at their capture through an "up" link. */
-function findPaymentForCaptureEvent(event: WebhookEvent): CaptureRef | null {
+async function findPaymentForCaptureEvent(event: WebhookEvent): Promise<CaptureRef | null> {
   const up = event.resource?.links?.find((link) => link.rel === "up")?.href;
   const captureId = up?.match(/\/captures\/([^/?#]+)/)?.[1] ?? event.resource?.id;
-  const fromCapture = captureId ? getCaptureRef(captureId) : null;
+  const fromCapture = captureId ? await getCaptureRef(captureId) : null;
   if (fromCapture) return fromCapture;
   // Older or unusual events: the signed event names the check, and the price stands in.
   const checkId = event.resource?.custom_id;
