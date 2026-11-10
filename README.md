@@ -61,7 +61,6 @@ npm run dev                  # http://localhost:3000
 | --- | --- | --- |
 | `AI_PROVIDER` | `gemini` or `claude` (default). The live site uses `gemini` | Your choice |
 | `GEMINI_API_KEY` | Checks and dispute kits with Gemini, free tier | [Google AI Studio](https://aistudio.google.com/apikey) |
-| `ANTHROPIC_API_KEY` | Checks and dispute kits with Claude | [Claude Console](https://platform.claude.com/) |
 | `DEMO_MODE` | `true` runs without any AI, using labelled pattern rules | Testing only |
 | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | Taking payment | [PayPal developer dashboard](https://developer.paypal.com/dashboard/applications), Sandbox app to start |
 | `PAYPAL_WEBHOOK_ID` | Invoices, pending payments, refunds | See "PayPal webhook" below |
