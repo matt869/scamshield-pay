@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const LANGUAGES = ["en", "es"] as const;
+export const LANGUAGES = ["en", "es", "fil"] as const;
 export type Language = (typeof LANGUAGES)[number];
 export const LanguageSchema = z.enum(LANGUAGES);
 

@@ -47,6 +47,7 @@ export function LanguageToggle() {
   const options: Array<{ value: Language; label: string }> = [
     { value: "en", label: "English" },
     { value: "es", label: "Español" },
+    { value: "fil", label: "Filipino" },
   ];
   return (
     <div className="language-toggle" role="group" aria-label={copy.nav.language}>

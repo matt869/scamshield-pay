@@ -1,36 +1,49 @@
 {
-  "_note": "Invented examples. Domains use the reserved .example TLD and phone numbers use the reserved 555-01XX range.",
+  "_note": "Invented examples. Domains use the reserved .example TLD and phone numbers use the reserved 555-01XX range. The overseas job offer is in Taglish in every language, because that is how such messages arrive.",
   "samples": [
     {
       "id": "toll",
-      "label": { "en": "Unpaid toll text", "es": "Texto de peaje sin pagar" },
+      "label": { "en": "Unpaid toll text", "es": "Texto de peaje sin pagar", "fil": "Text tungkol sa hindi nabayarang toll" },
       "message": {
         "en": "FINAL NOTICE: You have an unpaid toll of $6.99. Pay within 24 hours to avoid a $250 fine and suspension of your license: https://toll-payments.example/pay",
-        "es": "AVISO FINAL: Tiene un peaje sin pagar de $6.99. Pague en 24 horas para evitar una multa de $250 y la suspensión de su licencia: https://pago-peajes.example/pagar"
+        "es": "AVISO FINAL: Tiene un peaje sin pagar de $6.99. Pague en 24 horas para evitar una multa de $250 y la suspensión de su licencia: https://pago-peajes.example/pagar",
+        "fil": "HULING PAALALA: May hindi pa kayo nababayarang toll na ₱350. Magbayad sa loob ng 24 oras para hindi kayo mamultahan ng ₱5,000 at ma-suspend ang lisensya ninyo: https://bayad-toll.example/pay"
       }
     },
     {
       "id": "grandchild",
-      "label": { "en": "Grandchild in trouble", "es": "Nieto en problemas" },
+      "label": { "en": "Grandchild in trouble", "es": "Nieto en problemas", "fil": "Apong nagkaproblema" },
       "message": {
         "en": "Grandma it's me. I got in a car accident and I'm at the police station. My phone broke so this is my lawyer's number. I need $4,000 for bail today. Please don't tell Mom and Dad, I'm so embarrassed. The lawyer says you can pay with store gift cards.",
-        "es": "Abuela, soy yo. Tuve un accidente de carro y estoy en la estación de policía. Se me rompió el teléfono, este es el número de mi abogado. Necesito $4,000 para la fianza hoy. Por favor no le digas a mi familia, me da mucha vergüenza. El abogado dice que puedes pagar con tarjetas de regalo de tiendas."
+        "es": "Abuela, soy yo. Tuve un accidente de carro y estoy en la estación de policía. Se me rompió el teléfono, este es el número de mi abogado. Necesito $4,000 para la fianza hoy. Por favor no le digas a mi familia, me da mucha vergüenza. El abogado dice que puedes pagar con tarjetas de regalo de tiendas.",
+        "fil": "Lola, ako 'to. Naaksidente ako at nasa presinto ako ngayon. Nasira ang phone ko kaya number ito ng abogado ko. Kailangan ko ng ₱50,000 para sa piyansa ngayong araw. Please wag mo munang sabihin kina Mama at Papa, nahihiya ako. Sabi ng abogado, puwede kang magbayad gamit ang gift card ng tindahan."
       }
     },
     {
       "id": "tech",
-      "label": { "en": "Computer virus warning", "es": "Aviso de virus" },
+      "label": { "en": "Computer virus warning", "es": "Aviso de virus", "fil": "Babala ng virus" },
       "message": {
         "en": "Security Alert: your computer has been infected and your bank accounts are at risk. Call our certified technicians now at 202-555-0143. Do not turn off your computer. A technician will connect using a remote access app to remove the virus.",
-        "es": "Alerta de seguridad: su computadora está infectada y sus cuentas bancarias están en riesgo. Llame ahora a nuestros técnicos certificados al 202-555-0143. No apague su computadora. Un técnico se conectará con una aplicación de acceso remoto para eliminar el virus."
+        "es": "Alerta de seguridad: su computadora está infectada y sus cuentas bancarias están en riesgo. Llame ahora a nuestros técnicos certificados al 202-555-0143. No apague su computadora. Un técnico se conectará con una aplicación de acceso remoto para eliminar el virus.",
+        "fil": "Security Alert: na-infect ang computer ninyo at nanganganib ang mga bank account ninyo. Tumawag ngayon din sa aming mga certified technician sa 202-555-0143. Huwag i-off ang computer. Kokonekta ang technician gamit ang remote access app para alisin ang virus."
+      }
+    },
+    {
+      "id": "ofw",
+      "label": { "en": "Overseas job offer (Taglish)", "es": "Oferta de trabajo en el extranjero (en taglish)", "fil": "Alok na trabaho sa abroad" },
+      "message": {
+        "en": "Hi po! Congrats, napili kayo bilang caregiver sa abroad, ₱90,000 kada buwan, libre ang tirahan. Last slot na lang po ito. Kailangan lang ng ₱18,000 placement fee para ma-reserve ang slot ninyo, padala ngayon na sa e-wallet na ibibigay ko. Wag mo muna sabihin sa pamilya mo hangga't hindi pa final ang visa.",
+        "es": "Hi po! Congrats, napili kayo bilang caregiver sa abroad, ₱90,000 kada buwan, libre ang tirahan. Last slot na lang po ito. Kailangan lang ng ₱18,000 placement fee para ma-reserve ang slot ninyo, padala ngayon na sa e-wallet na ibibigay ko. Wag mo muna sabihin sa pamilya mo hangga't hindi pa final ang visa.",
+        "fil": "Hi po! Congrats, napili kayo bilang caregiver sa abroad, ₱90,000 kada buwan, libre ang tirahan. Last slot na lang po ito. Kailangan lang ng ₱18,000 placement fee para ma-reserve ang slot ninyo, padala ngayon na sa e-wallet na ibibigay ko. Wag mo muna sabihin sa pamilya mo hangga't hindi pa final ang visa."
       }
     },
     {
       "id": "appointment",
-      "label": { "en": "Ordinary reminder", "es": "Recordatorio común" },
+      "label": { "en": "Ordinary reminder", "es": "Recordatorio común", "fil": "Karaniwang paalala" },
       "message": {
         "en": "Hi, this is Riverside Dental reminding you of your cleaning on Tuesday at 2:30 PM. Reply C to confirm or call the office if you need to reschedule.",
-        "es": "Hola, le recordamos de Riverside Dental su limpieza del martes a las 2:30 PM. Responda C para confirmar o llame al consultorio si necesita cambiar la cita."
+        "es": "Hola, le recordamos de Riverside Dental su limpieza del martes a las 2:30 PM. Responda C para confirmar o llame al consultorio si necesita cambiar la cita.",
+        "fil": "Hi, ito ang Riverside Dental. Pinapaalala namin ang inyong cleaning sa Martes, 2:30 PM. Mag-reply ng C para kumpirmahin, o tumawag sa clinic kung kailangan ninyong ilipat ang schedule."
       }
     }
   ]

@@ -6,7 +6,7 @@
 
 ## Why
 
-Scam texts and emails reach people every day, and many of them cannot tell a fake toll notice or a "grandchild in trouble" from a real one. They need a plain-language check before any money moves. People who already paid need help fast: who to call, what to say, and a dispute letter that fits their case. ScamShield Pay is for both groups, in English and Spanish.
+Scam texts and emails reach people every day, and many of them cannot tell a fake toll notice or a "grandchild in trouble" from a real one. They need a plain-language check before any money moves. People who already paid need help fast: who to call, what to say, and a dispute letter that fits their case. ScamShield Pay is for both groups, in English, Spanish, and Filipino.
 
 ## For judges
 
@@ -36,7 +36,7 @@ Scam texts and emails reach people every day, and many of them cannot tell a fak
 
 Paste a suspicious text or email and get a free, plain-language verdict before any money moves. People who already paid get a free step-by-step guide, and can buy a dispute kit: a letter, a phone script, and an evidence checklist written for their case.
 
-English and Spanish. Built with Next.js, PayPal, and Claude or Google Gemini.
+English, Spanish, and Filipino. Built with Next.js, PayPal, and Claude or Google Gemini.
 
 ![A result page: a red "Stop. Do not pay." stamp above the reader's message, with each warning sign highlighted, numbered, and explained alongside](docs/screenshots/result.png)
 

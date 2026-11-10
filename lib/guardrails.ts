@@ -26,11 +26,15 @@ const HARD_SIGNALS: HardSignal[] = [
         title: "Intenta dar órdenes a un revisor automático",
         explanation: "El mensaje tiene frases dirigidas al programa que lo revisa. Un mensaje real no tiene motivo para hacer eso.",
       },
+      fil: {
+        title: "Sinusubukan nitong utusan ang awtomatikong checker",
+        explanation: "May mga salita sa mensahe na para sa software na sumusuri dito. Walang dahilan ang totoong mensahe para gawin ito.",
+      },
     },
   },
   {
     pattern:
-      /\b(pay|payment|buy|purchase|send|get)\b.{0,50}\bgift ?cards?\b|\bgift ?cards?\b.{0,50}\b(pay|payment|codes?|numbers?|scratch)\b|\b(pag\w*|compr\w*|env[ií]\w*)\b.{0,50}\btarjetas? de regalo\b|\btarjetas? de regalo\b.{0,50}\b(pag\w*|c[oó]digos?|n[uú]meros?)\b/iu,
+      /\b(pay|payment|buy|purchase|send|get)\b.{0,50}\bgift ?cards?\b|\bgift ?cards?\b.{0,50}\b(pay|payment|codes?|numbers?|scratch)\b|\b(pag\w*|compr\w*|env[ií]\w*)\b.{0,50}\btarjetas? de regalo\b|\btarjetas? de regalo\b.{0,50}\b(pag\w*|c[oó]digos?|n[uú]meros?)\b|\b(bumili|bilhin|bili|magbayad|bayaran|bayad|magpadala|ipadala|padala|isend)\w*\b.{0,50}\bgift ?cards?\b/iu,
     flag: {
       en: {
         title: "It asks for gift cards",
@@ -40,11 +44,15 @@ const HARD_SIGNALS: HardSignal[] = [
         title: "Pide tarjetas de regalo",
         explanation: "Las empresas y oficinas de gobierno reales no aceptan pagos con tarjetas de regalo. Ese dinero es muy difícil de recuperar.",
       },
+      fil: {
+        title: "Humihingi ito ng gift card",
+        explanation: "Hindi tumatanggap ng bayad na gift card ang totoong kumpanya o opisina ng gobyerno. Napakahirap bawiin ang perang ipinadala sa ganitong paraan.",
+      },
     },
   },
   {
     pattern:
-      /\b(send|pay|deposit|transfer|buy)\b.{0,50}\b(bitcoin|btc|crypto\w*|usdt|ethereum)\b|\b(bitcoin|crypto) atm\b|\b(env[ií]\w*|pag\w*|deposit\w*|transfier\w*|compr\w*)\b.{0,50}\b(bitcoin|criptomonedas?|cripto)\b|\bcajero de (bitcoin|cripto\w*)\b/iu,
+      /\b(send|pay|deposit|transfer|buy)\b.{0,50}\b(bitcoin|btc|crypto\w*|usdt|ethereum)\b|\b(bitcoin|crypto) atm\b|\b(env[ií]\w*|pag\w*|deposit\w*|transfier\w*|compr\w*)\b.{0,50}\b(bitcoin|criptomonedas?|cripto)\b|\bcajero de (bitcoin|cripto\w*)\b|\b(magpadala|ipadala|padala|magbayad|bayad|mag-?invest|i-?invest|bumili|bili|magdeposito|ideposito)\w*\b.{0,50}\b(bitcoin|btc|crypto\w*|usdt|ethereum)\b/iu,
     flag: {
       en: {
         title: "It asks for cryptocurrency",
@@ -54,10 +62,15 @@ const HARD_SIGNALS: HardSignal[] = [
         title: "Pide criptomonedas",
         explanation: "Los pagos con criptomonedas casi nunca se pueden revertir. Por eso los estafadores los piden.",
       },
+      fil: {
+        title: "Humihingi ito ng crypto",
+        explanation: "Kadalasang hindi na maibabalik ang bayad na crypto. Kaya ito ang hinihingi ng mga scammer.",
+      },
     },
   },
   {
-    pattern: /\b(anydesk|teamviewer|ultraviewer|rustdesk|logmein|remote access|acceso remoto)\b/iu,
+    pattern:
+      /\b(anydesk|teamviewer|ultraviewer|rustdesk|logmein|remote access|acceso remoto)\b|\b(kontrolin|ma-?kontrol|ma-?access|i-?access)\b.{0,30}\b(cellphone|cp|phone|selpon|computer|kompyuter|laptop)\b/iu,
     flag: {
       en: {
         title: "It asks for access to your device",
@@ -67,11 +80,15 @@ const HARD_SIGNALS: HardSignal[] = [
         title: "Pide acceso a su dispositivo",
         explanation: "Los programas de acceso remoto permiten que otra persona controle su dispositivo y vea sus cuentas. No los instale para un desconocido.",
       },
+      fil: {
+        title: "Gusto nitong makapasok sa device ninyo",
+        explanation: "Sa mga remote-access app, makokontrol ng ibang tao ang device ninyo at makikita ang mga account ninyo. Huwag itong i-install para sa taong hindi ninyo kilala.",
+      },
     },
   },
   {
     pattern:
-      /\b(do not|don'?t|never)\b.{0,20}\b(tell|inform|contact|call)\b.{0,30}\b(anyone|anybody|family|bank|police|mom|dad|mum|parents|husband|wife|kids|children|son|daughter)\b|\bkeep (this|it) (a )?(secret|confidential|between us)\b|\bno (le |les )?(diga|digas|cuente|cuentes|avise|avises)\b.{0,30}\b(nadie|familia|banco|polic[ií]a|mam[aá]|pap[aá]|padres|esposo|esposa|hijos?|hijas?)(?!\p{L})/iu,
+      /\b(do not|don'?t|never)\b.{0,20}\b(tell|inform|contact|call)\b.{0,30}\b(anyone|anybody|family|bank|police|mom|dad|mum|parents|husband|wife|kids|children|son|daughter)\b|\bkeep (this|it) (a )?(secret|confidential|between us)\b|\bno (le |les )?(diga|digas|cuente|cuentes|avise|avises)\b.{0,30}\b(nadie|familia|banco|polic[ií]a|mam[aá]|pap[aá]|padres|esposo|esposa|hijos?|hijas?)(?!\p{L})|\b(huwag|wag)\b.{0,25}\b(sabihin|sasabihin|ipaalam|banggitin|ikwento|ipagsabi)\b|\batin[- ]atin lang\b|\b(sikreto|secret) (lang |muna )?(natin|muna)\b/iu,
     flag: {
       en: {
         title: "It tells you to keep this secret",
@@ -80,6 +97,29 @@ const HARD_SIGNALS: HardSignal[] = [
       es: {
         title: "Le pide guardar el secreto",
         explanation: "Los estafadores piden secreto para que nadie pueda advertirle. Hable con alguien de confianza antes de hacer nada.",
+      },
+      fil: {
+        title: "Pinapalihim nito sa inyo",
+        explanation: "Pinapalihim ng mga scammer para walang makapagbabala sa inyo. Kausapin muna ang taong pinagkakatiwalaan ninyo bago gumawa ng kahit ano.",
+      },
+    },
+  },
+  {
+    // Fake OFW and job recruiters ask for a fee before the job exists.
+    pattern:
+      /\bplacement fee\b|\b(reservation|processing|medical|training|deployment) fee\b.{0,60}\b(trabaho|abroad|job|work|visa|deploy\w*|alis|slot)\b|\b(trabaho|abroad|job|visa|slot)\b.{0,60}\b(reservation|processing|medical|training|deployment) fee\b/iu,
+    flag: {
+      en: {
+        title: "It asks for a fee to get a job",
+        explanation: "Recruiters who ask you to pay a placement or processing fee before you start are a common job scam, especially for work abroad.",
+      },
+      es: {
+        title: "Pide un pago para darle un trabajo",
+        explanation: "Pedir una cuota de colocación o de trámite antes de empezar es una estafa común de empleo, sobre todo para trabajos en el extranjero.",
+      },
+      fil: {
+        title: "Humihingi ito ng bayad para sa trabaho",
+        explanation: "Karaniwang scam sa trabaho, lalo na sa abroad, ang paghingi ng placement fee o processing fee bago pa kayo magsimula. Suriin muna ang recruiter sa DMW.",
       },
     },
   },
@@ -96,6 +136,25 @@ const FALLBACK_STEPS: Record<Language, string[]> = {
     "No abra enlaces, no llame a números ni pague usando nada de este mensaje.",
     "Comuníquese usted con la empresa o la persona, con un número o sitio web que ya conozca y en el que confíe.",
   ],
+  fil: [
+    "Huwag i-click ang mga link, tawagan ang mga numero, o magbayad gamit ang anumang nasa mensaheng ito.",
+    "Kayo mismo ang kumontak sa kumpanya o tao, gamit ang numero o website na pinagkakatiwalaan na ninyo.",
+  ],
+};
+
+const RAISED_REPORT: Record<Language, { headline: string; summary: string }> = {
+  en: {
+    headline: "This message has at least one serious warning sign.",
+    summary: "We found a sign that often appears in scams. Check for yourself before you pay or reply.",
+  },
+  es: {
+    headline: "Este mensaje tiene al menos una señal de advertencia seria.",
+    summary: "Encontramos una señal que suele aparecer en estafas. Verifique por su cuenta antes de pagar o responder.",
+  },
+  fil: {
+    headline: "May kahit isang seryosong palatandaan ng scam ang mensaheng ito.",
+    summary: "May nakita kaming palatandaan na madalas makita sa mga scam. Suriin muna ninyo bago magbayad o sumagot.",
+  },
 };
 
 export function applyGuardrails(analysis: Analysis, message: string, language: Language): Analysis {
@@ -116,14 +175,8 @@ export function applyGuardrails(analysis: Analysis, message: string, language: L
   let summary = analysis.summary;
   if (triggered.length > 0 && risk === "low") {
     risk = "medium";
-    headline =
-      language === "es"
-        ? "Este mensaje tiene al menos una señal de advertencia seria."
-        : "This message has at least one serious warning sign.";
-    summary =
-      language === "es"
-        ? "Encontramos una señal que suele aparecer en estafas. Verifique por su cuenta antes de pagar o responder."
-        : "We found a sign that often appears in scams. Check for yourself before you pay or reply.";
+    headline = RAISED_REPORT[language].headline;
+    summary = RAISED_REPORT[language].summary;
   }
 
   const addedFlags: RedFlag[] =

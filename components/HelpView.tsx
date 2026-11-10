@@ -3,10 +3,25 @@
 import Link from "next/link";
 import { useLanguage } from "./LanguageToggle";
 import resources from "@/data/resources.json";
+import type { Language } from "@/lib/types";
+
+type Localized = Partial<Record<Language, string>>;
+
+/** US offices for English and Spanish readers, Philippine offices for Filipino readers. */
+interface Contact {
+  id: string;
+  languages: Language[];
+  url: Localized;
+  label: Localized;
+  name: Localized;
+  use: Localized;
+  href?: string;
+}
 
 export function HelpView() {
   const { language, copy } = useLanguage();
   const help = copy.help;
+  const contacts = (resources.contacts as Contact[]).filter((contact) => contact.languages.includes(language));
 
   return (
     <div className="stack-large help-page">
@@ -69,7 +84,7 @@ export function HelpView() {
                 </tr>
               </thead>
               <tbody>
-                {resources.contacts.map((contact) => (
+                {contacts.map((contact) => (
                   <tr key={contact.id}>
                     <th scope="row">
                       <a

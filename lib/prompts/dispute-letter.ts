@@ -1,4 +1,5 @@
 import type { DisputeDetails, Language } from "../types";
+import { WRITING_LANGUAGE } from "./scam-classifier";
 
 export const DISPUTE_SYSTEM = `You help someone who sent money to a scammer prepare to ask their bank, card issuer, or payment company for help. They will send the letter and make the call themselves.
 
@@ -24,7 +25,6 @@ export function buildDisputePrompt(
   guidance: string,
   language: Language,
 ): string {
-  const languageName = language === "es" ? "Spanish" : "English";
   const provided = (value: string) => neutralizeTags(value) || "(not provided)";
   return `<original_message>
 ${neutralizeTags(message)}
@@ -41,5 +41,5 @@ What happened, in their words: ${provided(details.whatHappened)}
 
 General guidance for this payment method, for your background only: ${guidance}
 
-Write everything in ${languageName}${language === "es" ? ', addressing the reader as "usted"' : ""}.`;
+Write everything in ${WRITING_LANGUAGE[language]}. Quote the original message only exactly as written.`;
 }
