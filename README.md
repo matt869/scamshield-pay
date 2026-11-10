@@ -34,10 +34,6 @@ Scam texts and emails reach people every day, and many of them cannot tell a fak
 
 - Cloudflare Workers, with data in Cloudflare D1.
 
-Paste a suspicious text or email and get a free, plain-language verdict before any money moves. People who already paid get a free step-by-step guide, and can buy a dispute kit: a letter, a phone script, and an evidence checklist written for their case.
-
-English, Spanish, and Filipino. Built with Next.js, PayPal, and Claude or Google Gemini.
-
 ![A result page: a red "Stop. Do not pay." stamp above the reader's message, with each warning sign highlighted, numbered, and explained alongside](docs/screenshots/result.png)
 
 <table>
@@ -59,7 +55,7 @@ npm run dev                  # http://localhost:3000
 
 | Variable | Needed for | Where to get it |
 | --- | --- | --- |
-| `AI_PROVIDER` | `gemini` or `claude` (default). The live site uses `gemini` | Your choice |
+| `AI_PROVIDER` | `gemini` (set in .env.example) or `claude` | Your choice |
 | `GEMINI_API_KEY` | Checks and dispute kits with Gemini, free tier | [Google AI Studio](https://aistudio.google.com/apikey) |
 | `DEMO_MODE` | `true` runs without any AI, using labelled pattern rules | Testing only |
 | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | Taking payment | [PayPal developer dashboard](https://developer.paypal.com/dashboard/applications), Sandbox app to start |
@@ -114,6 +110,7 @@ The message being judged may be written by a criminal, and the worst failure is 
 - **Nothing from the message is clickable.** It is rendered as plain text.
 - **The browser never decides a payment.** The server sets the price, and the kit unlocks only after PayPal's own response matches the check, amount, and currency. Webhooks are signature-verified and invoice state is re-fetched from PayPal. A refunded kit stays closed.
 - **Emergency help is never behind the paywall.** The guide and official contacts are free.
+- Pasted messages are stored in plain text in Cloudflare D1 and deleted after 24 hours, or 30 days for paid kits.
 
 ## Tests
 
