@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyGuardrails } from "@/lib/guardrails";
-import { findQuote, segmentMessage } from "@/lib/highlight";
+import { findQuote, orderFlags, segmentMessage } from "@/lib/highlight";
 import { buildClassifierPrompt } from "@/lib/prompts/scam-classifier";
 import { strictOutputFormat } from "@/lib/claude";
 import { type Analysis, AnalysisSchema } from "@/lib/types";
@@ -106,6 +106,41 @@ describe("message marking", () => {
   it("leaves an overlapping quote unmarked", () => {
     const segments = segmentMessage("pay within 24 hours", ["within 24", "24 hours"]);
     expect(segments.filter((segment) => segment.kind === "mark")).toHaveLength(1);
+  });
+
+  it("numbers findings in reading order, with the same numbers in the message and the list", () => {
+    const message =
+      "Grandma it's me. My phone broke so this is my lawyer's number. I need $4,000 for bail today. " +
+      "Please don't tell Mom and Dad. You can pay with store gift cards.";
+    const flag = (title: string, quote: string | null) => ({ title, explanation: "", quote });
+    // Model order, most serious first, which is not the order they appear in the message.
+    const flags = [
+      flag("gift cards", "pay with store gift cards"),
+      flag("secret", "Please don't tell Mom and Dad"),
+      flag("missing", null),
+      flag("rush", "$4,000 for bail today"),
+      flag("overlaps rush", "bail today"),
+      flag("not in message", "wire the money"),
+      flag("new number", "My phone broke so this is my lawyer's number"),
+    ];
+
+    const ordered = orderFlags(message, flags);
+    expect(ordered.map(({ flag }) => flag.title)).toEqual([
+      "new number",
+      "rush",
+      "secret",
+      "gift cards",
+      "overlaps rush",
+      "missing",
+      "not in message",
+    ]);
+
+    const marks = segmentMessage(
+      message,
+      ordered.map(({ quote }) => quote),
+    ).filter((segment) => segment.kind === "mark");
+    expect(marks.map((mark) => mark.flagNumber)).toEqual([1, 2, 3, 4]);
+    marks.forEach((mark, index) => expect(mark.text).toBe(ordered[index]?.flag.quote));
   });
 });
 

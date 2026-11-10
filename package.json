@@ -4,7 +4,7 @@
   "private": true,
   "description": "Free scam check for suspicious messages, plus a paid dispute kit for people who already sent money.",
   "author": "matt869",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/matt869/scamshield-pay.git"

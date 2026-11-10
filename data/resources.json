@@ -60,8 +60,8 @@
     },
     {
       "methods": ["zelle_or_app"],
-      "en": { "title": "Zelle, Venmo, or Cash App", "action": "Report it inside the app and call your bank using the number on your card. These payments are hard to reverse, so ask directly whether a recovery can be tried." },
-      "es": { "title": "Zelle, Venmo o Cash App", "action": "Repórtelo dentro de la aplicación y llame a su banco con el número de su tarjeta. Estos pagos son difíciles de revertir, así que pregunte directamente si se puede intentar recuperarlos." }
+      "en": { "title": "Person-to-person payment apps", "action": "Report it inside the app and call your bank using the number on your card. These payments are hard to reverse, so ask directly whether a recovery can be tried." },
+      "es": { "title": "Aplicaciones de pagos entre personas", "action": "Repórtelo dentro de la aplicación y llame a su banco con el número de su tarjeta. Estos pagos son difíciles de revertir, así que pregunte directamente si se puede intentar recuperarlos." }
     },
     {
       "methods": ["gift_card"],

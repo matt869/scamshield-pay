@@ -2,6 +2,38 @@
 
 [![CI](https://github.com/matt869/scamshield-pay/actions/workflows/ci.yml/badge.svg)](https://github.com/matt869/scamshield-pay/actions/workflows/ci.yml)
 
+**Live demo:** https://scamshield-pay.forever-online.workers.dev
+
+## Why
+
+Scam texts and emails reach people every day, and many of them cannot tell a fake toll notice or a "grandchild in trouble" from a real one. They need a plain-language check before any money moves. People who already paid need help fast: who to call, what to say, and a dispute letter that fits their case. ScamShield Pay is for both groups, in English and Spanish.
+
+## For judges
+
+- The live site runs in the **PayPal sandbox**. No real money moves.
+- The scam check is free. Paste a message, or click one of the sample messages.
+- To test the paid dispute kit, open a result, click the pay button, and log in with a sandbox **personal** account from your own PayPal developer dashboard (**Testing Tools → Sandbox Accounts**).
+
+## Built for the PayPal AI Hackathon
+
+**PayPal**
+
+- Orders API v2: the server creates and captures each order.
+- Invoicing API v2: the reader can get the kit by invoice email.
+- Webhooks with signature verification: `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.CAPTURE.REVERSED`, `INVOICING.INVOICE.PAID`, `INVOICING.INVOICE.REFUNDED`.
+- The PayPal JavaScript SDK button on the pay page.
+- The server checks the amount and currency in PayPal's own response before it unlocks a kit. A refunded kit stays locked.
+
+**AI**
+
+- The live site uses **Google Gemini**. Claude is also supported: set `AI_PROVIDER=claude`.
+- The model (a) classifies the message, names the scam type, and quotes each red flag from the message, and (b) writes the dispute letter, phone script, and evidence checklist for the reader's case.
+- Guardrails in `lib/guardrails.ts` run after the model. For example, a demand for gift cards, crypto, or remote access can never get a "low" verdict, and quotes that are not in the message are not marked.
+
+**Hosting**
+
+- Cloudflare Workers, with data in Cloudflare D1.
+
 Paste a suspicious text or email and get a free, plain-language verdict before any money moves. People who already paid get a free step-by-step guide, and can buy a dispute kit: a letter, a phone script, and an evidence checklist written for their case.
 
 English and Spanish. Built with Next.js, PayPal, and Claude or Google Gemini.
@@ -27,7 +59,7 @@ npm run dev                  # http://localhost:3000
 
 | Variable | Needed for | Where to get it |
 | --- | --- | --- |
-| `AI_PROVIDER` | `gemini` or `claude` (default) | Your choice |
+| `AI_PROVIDER` | `gemini` or `claude` (default). The live site uses `gemini` | Your choice |
 | `GEMINI_API_KEY` | Checks and dispute kits with Gemini, free tier | [Google AI Studio](https://aistudio.google.com/apikey) |
 | `ANTHROPIC_API_KEY` | Checks and dispute kits with Claude | [Claude Console](https://platform.claude.com/) |
 | `DEMO_MODE` | `true` runs without any AI, using labelled pattern rules | Testing only |
@@ -54,7 +86,7 @@ Without the webhook, immediate PayPal and card payments still unlock the kit, bu
 ## How it works
 
 ```
-Message ─ POST /api/analyze ─ Claude ─ guardrails ─ store ─ /result
+Message ─ POST /api/analyze ─ Gemini or Claude ─ guardrails ─ store ─ /result
                                                               │
                      free guide: /help  ◄─────────────────────┤
                                                               ▼
@@ -64,7 +96,8 @@ Message ─ POST /api/analyze ─ Claude ─ guardrails ─ store ─ /result
 
 | Path | What it holds |
 | --- | --- |
-| `lib/claude.ts` | Claude calls and the schema sent to the API |
+| `lib/claude.ts` | Claude calls, the schema sent to the API, and the switch to Gemini |
+| `lib/gemini.ts` | Gemini calls, with a backup key and a fallback model |
 | `lib/prompts/` | The classifier and dispute-letter prompts |
 | `lib/guardrails.ts` | Rules that hold whatever the model returns |
 | `lib/paypal.ts` | PayPal REST client and payment verification |
@@ -76,7 +109,7 @@ Message ─ POST /api/analyze ─ Claude ─ guardrails ─ store ─ /result
 
 The message being judged may be written by a criminal, and the worst failure is false reassurance.
 
-- **No verdict is better than a guessed one.** If Claude refuses, errors, or returns something outside the schema, the reader is told we could not check it and not to pay yet.
+- **No verdict is better than a guessed one.** If the model refuses, errors, or returns something outside the schema, the reader is told we could not check it and not to pay yet.
 - **Guardrails run after the model.** Demands for gift cards or crypto, remote-access tools, requests for secrecy, and text aimed at an AI checker all raise a "low" verdict to "medium". Next steps containing links or phone numbers are dropped, because they could come from the sender. Quotes not found in the message are not marked.
 - **"Low" never means safe.** The page always says we cannot confirm who sent the message.
 - **Nothing from the message is clickable.** It is rendered as plain text.
@@ -90,7 +123,7 @@ npm test            # guardrails, marking, payment and webhook rules
 npm run typecheck
 ```
 
-These use mocked PayPal responses and do not call Claude. GitHub Actions runs the type check, tests, and a production build on every push.
+These use mocked PayPal and AI responses and do not call Gemini or Claude. GitHub Actions runs the type check, tests, and a production build on every push.
 
 ## Deploying to Cloudflare (free)
 
@@ -124,9 +157,8 @@ Outside Cloudflare, `lib/store.ts` writes a JSON file (`STORE_FILE`, default `.d
 
 ### Before taking real money
 
-- [ ] Test the full flow against the PayPal sandbox and a real Claude key.
+- [ ] Test the full flow against the PayPal sandbox and a real Gemini or Claude key.
 - [ ] Add a privacy policy and terms, including a refund policy. The app stores submitted messages for 24 hours, or 30 days once an invoice is sent or a kit is paid for.
 - [ ] Have a lawyer review the dispute kit and the payment-deadline guidance in `data/resources.json`.
 - [ ] Have a native speaker review the Spanish.
-- [ ] Decide on a license. `LICENSE` currently reserves all rights, so the public code is for viewing only.
 - [ ] Back up the store file, and set `PAYPAL_ENV=live` with live credentials and a live webhook ID.
