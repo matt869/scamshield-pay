@@ -5,24 +5,24 @@
       "id": "toll",
       "label": { "en": "Unpaid toll text", "es": "Texto de peaje sin pagar" },
       "message": {
-        "en": "FINAL NOTICE: You have an unpaid toll of $6.99. Pay within 24 hours to avoid a $250 fine and suspension of your license: https://ezpass-tolls.example/pay",
-        "es": "AVISO FINAL: Tiene un peaje sin pagar de $6.99. Pague en 24 horas para evitar una multa de $250 y la suspensión de su licencia: https://ezpass-peajes.example/pagar"
+        "en": "FINAL NOTICE: You have an unpaid toll of $6.99. Pay within 24 hours to avoid a $250 fine and suspension of your license: https://toll-payments.example/pay",
+        "es": "AVISO FINAL: Tiene un peaje sin pagar de $6.99. Pague en 24 horas para evitar una multa de $250 y la suspensión de su licencia: https://pago-peajes.example/pagar"
       }
     },
     {
       "id": "grandchild",
       "label": { "en": "Grandchild in trouble", "es": "Nieto en problemas" },
       "message": {
-        "en": "Grandma it's me. I got in a car accident and I'm at the police station. My phone broke so this is my lawyer's number. I need $4,000 for bail today. Please don't tell Mom and Dad, I'm so embarrassed. The lawyer says you can pay with gift cards from Target.",
-        "es": "Abuela, soy yo. Tuve un accidente de carro y estoy en la estación de policía. Se me rompió el teléfono, este es el número de mi abogado. Necesito $4,000 para la fianza hoy. Por favor no le digas a mi familia, me da mucha vergüenza. El abogado dice que puedes pagar con tarjetas de regalo de Target."
+        "en": "Grandma it's me. I got in a car accident and I'm at the police station. My phone broke so this is my lawyer's number. I need $4,000 for bail today. Please don't tell Mom and Dad, I'm so embarrassed. The lawyer says you can pay with store gift cards.",
+        "es": "Abuela, soy yo. Tuve un accidente de carro y estoy en la estación de policía. Se me rompió el teléfono, este es el número de mi abogado. Necesito $4,000 para la fianza hoy. Por favor no le digas a mi familia, me da mucha vergüenza. El abogado dice que puedes pagar con tarjetas de regalo de tiendas."
       }
     },
     {
       "id": "tech",
       "label": { "en": "Computer virus warning", "es": "Aviso de virus" },
       "message": {
-        "en": "Microsoft Security Alert: your computer has been infected and your bank accounts are at risk. Call our certified technicians now at 202-555-0143. Do not turn off your computer. A technician will connect using AnyDesk to remove the virus.",
-        "es": "Alerta de seguridad de Microsoft: su computadora está infectada y sus cuentas bancarias están en riesgo. Llame ahora a nuestros técnicos certificados al 202-555-0143. No apague su computadora. Un técnico se conectará con AnyDesk para eliminar el virus."
+        "en": "Security Alert: your computer has been infected and your bank accounts are at risk. Call our certified technicians now at 202-555-0143. Do not turn off your computer. A technician will connect using a remote access app to remove the virus.",
+        "es": "Alerta de seguridad: su computadora está infectada y sus cuentas bancarias están en riesgo. Llame ahora a nuestros técnicos certificados al 202-555-0143. No apague su computadora. Un técnico se conectará con una aplicación de acceso remoto para eliminar el virus."
       }
     },
     {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { findQuote, segmentMessage } from "@/lib/highlight";
+import { orderFlags, segmentMessage } from "@/lib/highlight";
 import type { RedFlag } from "@/lib/types";
 import { useLanguage } from "./LanguageToggle";
 
@@ -51,12 +51,8 @@ export function RedFlagList({
   reportLanguage: string;
 }) {
   const { copy } = useLanguage();
-  // Numbered in reading order, so the marks run 1, 2, 3 down the message. Signs that cannot be
-  // pointed at in the message come last.
-  const ordered = flags
-    .map((flag) => ({ flag, at: flag.quote ? (findQuote(message, flag.quote)?.[0] ?? null) : null }))
-    .sort((a, b) => (a.at ?? Number.MAX_SAFE_INTEGER) - (b.at ?? Number.MAX_SAFE_INTEGER));
-  const quotes = ordered.map(({ flag, at }) => (at === null ? null : flag.quote));
+  const ordered = orderFlags(message, flags);
+  const quotes = ordered.map(({ quote }) => quote);
 
   return (
     <section className="findings">
